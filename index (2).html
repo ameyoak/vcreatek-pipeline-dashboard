@@ -1,0 +1,2213 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>VCreaTek | Deal Pipeline Report</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&amp;family=Rubik:wght@400;500;600;700&amp;family=Roboto+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --blue:#3a2d7d;--deep:#241d52;--orange:#f58232;--red:#be2139;
+  --purple:#633a96;--green:#2f8b45;--amber:#d97706;--ice:#7ed3f0;--mint:#86c883;
+  --ink:#241f3d;--grey:#6d6784;--line:#e4e0f0;--cream:#f7f5fb;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--cream);color:var(--ink);font-family:'Rubik',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Exo 2',sans-serif;}
+.mono{font-family:'Roboto Mono',monospace;}
+
+/* ── UPLOAD ──────────────────────────────────────────────────────── */
+#uploadScreen{min-height:100vh;display:flex;flex-direction:column;}
+.up-hdr{background:linear-gradient(135deg,var(--blue),var(--deep));color:#fff;padding:28px 40px;position:relative;overflow:hidden;}
+.halo-bg{position:absolute;right:-50px;top:-70px;width:300px;height:300px;opacity:.15;background:conic-gradient(from 210deg,var(--orange),var(--red) 40%,transparent 65%);clip-path:polygon(45% 0%,100% 0%,55% 100%,0% 100%);transform:rotate(8deg);}
+.up-brand{display:flex;align-items:center;gap:9px;margin-bottom:10px;position:relative;z-index:2;}
+.up-mark{width:26px;height:26px;background:linear-gradient(135deg,var(--orange),var(--red));clip-path:polygon(45% 0%,100% 0%,55% 100%,0% 100%);}
+.up-brand span{font-family:'Exo 2';font-weight:700;font-size:13.5px;color:rgba(255,255,255,.85);}
+.up-title{font-size:26px;font-weight:800;margin-bottom:4px;position:relative;z-index:2;}
+.up-sub{color:#cfc7ec;font-size:13px;position:relative;z-index:2;}
+.up-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}
+.up-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:40px 48px;max-width:680px;width:100%;box-shadow:0 4px 32px rgba(58,45,125,.08);}
+.up-card h2{font-size:20px;font-weight:800;margin-bottom:6px;text-align:center;}
+.up-hint{font-size:13px;color:var(--grey);text-align:center;margin-bottom:30px;}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.zone{border:2px dashed var(--line);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.zone:hover,.zone.drag{border-color:var(--orange);background:#fff8f2;}
+.zone.loaded{border-color:var(--green);border-style:solid;background:#f0faf2;}
+.zone.error{border-color:var(--red);border-style:solid;background:#fff0f0;animation:shake .35s ease;}
+.zone.checking{border-color:var(--amber);border-style:solid;background:#fffbf0;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.zone.loaded .zbadge{background:#e2f3ea;color:var(--green);}
+.zone.error .zbadge{background:#fbe4e6;color:var(--red);}
+.zone.checking .zbadge{background:#fff8ec;color:var(--amber);}
+.zerr{font-size:11px;color:var(--red);margin-top:7px;line-height:1.4;font-weight:500;display:none;}
+.zone.error .zerr{display:block;}
+.zswap-btn{display:none;margin-top:9px;background:var(--red);color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;font-family:'Rubik';cursor:pointer;transition:background .15s;}
+.zswap-btn:hover{background:#8b0000;}
+.zone.error .zswap-btn{display:inline-block;}
+.zone-icon{font-size:32px;margin-bottom:10px;}
+.zone h3{font-size:13.5px;font-weight:700;margin-bottom:4px;}
+.zone p{font-size:11.5px;color:var(--grey);line-height:1.5;}
+.fname{font-size:11px;color:var(--green);font-weight:600;margin-top:8px;word-break:break-all;}
+.zbadge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:6px;}
+.zone.loaded .zbadge{background:#e2f3ea;color:var(--green);}
+.zone:not(.loaded) .zbadge{background:#efeaf9;color:var(--grey);}
+.zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.gen-btn{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'Exo 2';cursor:pointer;transition:all .2s;}
+.gen-btn:hover:not(:disabled){background:var(--deep);}
+.gen-btn:disabled{background:#c5bde0;cursor:not-allowed;}
+.up-note{font-size:11.5px;color:var(--grey);text-align:center;margin-top:14px;}
+
+/* ── SPINNER ─────────────────────────────────────────────────────── */
+#spinner{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:18px;}
+.spin{width:48px;height:48px;border:4px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#spinner p{font-family:'Exo 2';font-size:15px;font-weight:700;color:var(--grey);}
+
+/* ── DASHBOARD ───────────────────────────────────────────────────── */
+#dashScreen{display:none;}
+header{background:linear-gradient(135deg,var(--blue),var(--deep));color:#fff;padding:22px 36px 28px;position:relative;overflow:hidden;}
+.halo{position:absolute;right:-50px;top:-70px;width:320px;height:320px;opacity:.15;background:conic-gradient(from 210deg,var(--orange),var(--red) 40%,transparent 65%);clip-path:polygon(45% 0%,100% 0%,55% 100%,0% 100%);transform:rotate(8deg);}
+.hrow{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;position:relative;z-index:2;}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.mark{width:26px;height:26px;background:linear-gradient(135deg,var(--orange),var(--red));clip-path:polygon(45% 0%,100% 0%,55% 100%,0% 100%);}
+.brand-txt{font-family:'Exo 2';font-weight:700;font-size:13.5px;color:rgba(255,255,255,.85);}
+.dh1{font-size:26px;font-weight:800;margin-bottom:4px;}
+.tagline{color:#cfc7ec;font-size:13px;}
+.asof{text-align:right;font-size:11.5px;color:#cfc7ec;line-height:1.7;}
+.asof b{color:#fff;font-family:'Exo 2';font-size:13px;display:block;}
+.reload-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;font-family:'Rubik';cursor:pointer;margin-top:8px;display:inline-block;}
+.reload-btn:hover{background:rgba(255,255,255,.25);}
+
+/* ── PIPELINE TOGGLE ─────────────────────────────────────────────── */
+.pipeline-toggle-bar{background:var(--deep);padding:10px 36px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.pipeline-toggle-bar span{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.55);margin-right:4px;}
+.ptog{padding:7px 20px;border-radius:25px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.7);font-size:12.5px;font-weight:600;font-family:'Rubik';cursor:pointer;transition:all .2s;}
+.ptog:hover{background:rgba(255,255,255,.1);color:#fff;}
+.ptog.active{background:#fff;color:var(--blue);border-color:#fff;}
+.ptog.active.prod{background:var(--orange);color:#fff;border-color:var(--orange);}
+.ptog.active.svc{background:var(--purple);color:#fff;border-color:var(--purple);}
+
+/* ── FILTER BAR ──────────────────────────────────────────────────── */
+.fbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 36px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(58,45,125,.06);}
+.fbar label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--grey);font-weight:600;display:block;margin-bottom:2px;}
+.fg select{appearance:none;border:1.5px solid var(--line);border-radius:7px;background:#fbfaff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236d6784'/%3E%3C/svg%3E") no-repeat right 9px center;padding:6px 24px 6px 10px;font-size:12.5px;font-family:'Rubik';color:var(--ink);min-width:120px;cursor:pointer;}
+.fg select:focus{outline:2px solid var(--orange);outline-offset:1px;}
+.rst{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Rubik';}
+.rst:hover{background:var(--deep);}
+.cpill{font-size:11.5px;color:var(--blue);background:#efeaf9;border-radius:20px;padding:5px 13px;font-weight:600;white-space:nowrap;}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────────────────── */
+main{padding:22px 36px 56px;max-width:1500px;margin:0 auto;}
+.section-title{display:flex;align-items:center;gap:10px;margin:26px 0 6px;}
+.section-title h2{font-size:16.5px;margin:0;font-weight:700;}
+.section-title .dash{flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 12px);}
+.section-title .badge{background:var(--orange);color:#fff;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.caption-note{font-size:11.5px;color:var(--grey);margin-bottom:14px;}
+
+/* ── KPI ─────────────────────────────────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin-bottom:22px;}
+.kpi{background:#fff;border-radius:var(--radius);padding:16px 16px 14px;border:1px solid var(--line);position:relative;overflow:hidden;}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--blue));}
+.kpi .label{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--grey);font-weight:600;}
+.kpi .value{font-family:'Exo 2';font-weight:800;font-size:26px;color:var(--ink);margin-top:6px;line-height:1;}
+.kpi .sub{font-size:11.5px;color:var(--grey);margin-top:6px;}
+.kpi .sub b{color:var(--ink);}
+
+/* ── PANELS / GRIDS ──────────────────────────────────────────────── */
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-bottom:18px;}
+.grid2-even{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px;}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px 14px;}
+.panel h3{margin:0 0 2px;font-size:14.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.tag{font-family:'Rubik';font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;background:#efeaf9;color:var(--blue);padding:2px 7px;border-radius:20px;}
+.desc{font-size:11.5px;color:var(--grey);margin-bottom:12px;margin-top:2px;}
+.chart-wrap{position:relative;height:250px;}
+.chart-wrap.tall{height:300px;}
+.chart-wrap.mini{height:170px;}
+
+/* ── OFFERING BLOCKS ─────────────────────────────────────────────── */
+.offering-block{border-radius:16px;padding:18px;margin-bottom:8px;}
+.offering-block.ds{background:linear-gradient(180deg,#efeaf9,#f4f1fb);border:1px solid #ddd3f2;}
+.offering-block.scy{background:linear-gradient(180deg,#fdeee1,#fbf3ea);border:1px solid #f6d9bd;}
+.offering-block h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+.offering-block h2 .dot{width:10px;height:10px;border-radius:50%;}
+.offering-block.ds h2 .dot{background:var(--purple);}
+.offering-block.scy h2 .dot{background:var(--orange);}
+.mini-panel{background:#fff;border-radius:12px;padding:14px 14px 6px;border:1px solid rgba(0,0,0,.05);}
+.mini-panel h4{margin:0 0 8px;font-size:12px;font-weight:700;color:var(--ink);text-align:center;}
+
+/* ── TABLES ──────────────────────────────────────────────────────── */
+.twrap{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:10px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--grey);border-bottom:2px solid var(--line);padding:9px 10px;font-weight:700;white-space:nowrap;position:sticky;top:0;background:#fff;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--blue);}
+tbody td{padding:8px 10px;border-bottom:1px solid #f0edf7;vertical-align:middle;}
+tbody tr:hover{background:#faf8ff;}
+.sub-txt{font-size:11px;color:var(--grey);margin-top:1px;}
+.empty{text-align:center;padding:26px;color:var(--grey);font-size:13px;}
+.stale{color:var(--amber);font-weight:600;}
+.pill{padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;display:inline-block;}
+.pactive{background:#e7f5e9;color:#2f8b45;}
+.ponhold{background:#fdeee1;color:var(--amber);}
+.pwon{background:#e2f3ea;color:#1f8a4d;}
+.plost{background:#fbe4e6;color:var(--red);}
+.pclosed{background:#efeaf9;color:var(--blue);}
+.pill-p{background:#e5f2fb;color:#1c7bb0;}
+.pill-s{background:#efeaf9;color:var(--blue);}
+.srow{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+#tsearch{border:1.5px solid var(--line);border-radius:7px;padding:7px 12px;font-size:12.5px;font-family:'Rubik';min-width:220px;color:var(--ink);}
+#tsearch:focus{outline:2px solid var(--orange);outline-offset:1px;}
+
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .grid2,.grid2-even,.grid3,.grid4{grid-template-columns:1fr;}
+  .zones{grid-template-columns:1fr;}
+  main,header,.fbar,.pipeline-toggle-bar,.up-body{padding-left:14px;padding-right:14px;}
+  .up-card{padding:24px 18px;}
+}
+
+/* ── EXPORT BUTTON ───────────────────────────────────────────────── */
+.exp-btn{background:linear-gradient(135deg,#f58232,#be2139);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Rubik';cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:8px;}
+.exp-btn:hover{opacity:.9;}
+.dl-btn{background:linear-gradient(135deg,#2f8b45,#1a5c2a);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Rubik';cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:8px;}
+.dl-btn:hover{opacity:.9;}
+
+/* ── EXPORT VIEW (screen: hidden; print: visible) ────────────────── */
+#exportView{display:none;}
+
+/* ── PRINT STYLES ────────────────────────────────────────────────── */
+@media print{
+  @page{size:A4 portrait;margin:8mm 10mm;}
+  /* Hide everything except the export summary */
+  *{box-shadow:none!important;}
+  #uploadScreen,#spinner,header,.pipeline-toggle-bar,.fbar,main,
+  #expPreview,#shareModal,#progressWrap{display:none!important;}
+  #dashScreen{display:block!important;}
+  #exportView{display:block!important;}
+  body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  /* Scale export to fit one A4 page */
+  #exportView{
+    position:fixed;top:0;left:0;width:100%;
+    transform-origin:top left;
+  }
+  .exp-hdr,.exp-kpi-card::before,.exp-bar-fill,.exp-cb{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+}
+
+/* ── EXPORT VIEW STYLES (screen preview + print) ─────────────────── */
+.exp-hdr{background:linear-gradient(135deg,#3a2d7d,#241d52);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;}
+.exp-mark{width:22px;height:22px;background:linear-gradient(135deg,#f58232,#be2139);clip-path:polygon(45% 0%,100% 0%,55% 100%,0% 100%);flex-shrink:0;}
+.exp-brand{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.exp-brand-txt{font-family:'Exo 2';font-size:10.5px;font-weight:700;opacity:.8;}
+.exp-title{font-family:'Exo 2';font-size:20px;font-weight:800;}
+.exp-sub{font-size:10.5px;opacity:.7;margin-top:2px;}
+.exp-asof{text-align:right;font-size:10.5px;opacity:.7;}
+.exp-asof b{font-family:'Exo 2';font-size:12px;color:#fff;opacity:1;display:block;margin-bottom:2px;}
+.exp-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;padding:12px 20px;background:#fff;border-bottom:1px solid #e4e0f0;}
+.exp-kpi-card{background:#fff;border:1px solid #e4e0f0;border-radius:8px;padding:10px 12px;position:relative;overflow:hidden;}
+.exp-kpi-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ak,#3a2d7d);}
+.exp-kpi-card .ek-lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.5px;color:#6d6784;font-weight:600;}
+.exp-kpi-card .ek-val{font-family:'Exo 2';font-size:22px;font-weight:800;color:#241f3d;line-height:1;margin-top:3px;}
+.exp-kpi-card .ek-sub{font-size:9.5px;color:#6d6784;margin-top:3px;}
+.exp-kpi-card .ek-sub b{color:#241f3d;}
+.exp-body{padding:12px 20px;background:#fff;}
+.exp-section{border:1px solid #e4e0f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+.exp-section h4{font-family:'Exo 2';font-size:11.5px;font-weight:700;color:#241f3d;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #f0edf7;}
+.exp-grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:10px;margin-bottom:10px;}
+.exp-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.exp-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.exp-bar-lbl{font-size:9px;color:#6d6784;width:120px;flex-shrink:0;text-align:right;line-height:1.2;}
+.exp-bar-track{flex:1;background:#f0edf7;border-radius:3px;height:12px;overflow:hidden;}
+.exp-bar-fill{height:100%;border-radius:3px;transition:width .3s;}
+.exp-bar-num{font-size:9.5px;font-weight:700;color:#241f3d;width:18px;text-align:right;flex-shrink:0;}
+.exp-cb-row{display:flex;gap:6px;flex-wrap:wrap;}
+.exp-cb{border-radius:7px;padding:7px 10px;text-align:center;flex:1;min-width:55px;}
+.exp-cb .ecv{font-family:'Exo 2';font-size:18px;font-weight:800;color:#fff;}
+.exp-cb .ecl{font-size:8.5px;font-weight:600;color:rgba(255,255,255,.85);margin-top:2px;}
+.exp-stat-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:10px;}
+.exp-stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.exp-stat-lbl{flex:1;color:#6d6784;}
+.exp-stat-val{font-weight:700;color:#241f3d;}
+.exp-oh-table{width:100%;border-collapse:collapse;font-size:9.5px;}
+.exp-oh-table thead th{background:#fdeee1;color:#8a5800;padding:5px 7px;font-weight:700;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;text-align:left;border-bottom:1px solid #f6d9bd;}
+.exp-oh-table tbody td{padding:5px 7px;border-bottom:1px solid #f0edf7;color:#241f3d;vertical-align:top;}
+.exp-oh-table tbody tr:last-child td{border-bottom:none;}
+.exp-footer{padding:8px 20px;background:#f7f5fb;border-top:1px solid #e4e0f0;display:flex;justify-content:space-between;font-size:9px;color:#6d6784;}
+.exp-pill{padding:2px 7px;border-radius:20px;font-size:8.5px;font-weight:600;display:inline-block;}
+/* preview modal */
+#expPreview{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;overflow-y:auto;padding:30px;}
+#expPreview.open{display:flex;justify-content:center;align-items:flex-start;}
+#expInner{background:#fff;border-radius:14px;overflow:hidden;max-width:820px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.exp-toolbar{background:#241f3d;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;}
+.exp-toolbar span{color:#cfc7ec;font-size:12px;font-weight:600;}
+.exp-toolbar-btns{display:flex;gap:8px;}
+.exp-print-btn{background:linear-gradient(135deg,#f58232,#be2139);color:#fff;border:none;border-radius:7px;padding:7px 16px;font-size:12px;font-weight:700;font-family:'Rubik';cursor:pointer;}
+.exp-close-btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;font-family:'Rubik';cursor:pointer;}
+.exp-close-btn:hover{background:rgba(255,255,255,.25);}
+/* ── PROGRESS BAR ──────────────────────────────────────────────── */
+#progressWrap{display:none;margin-top:18px;}
+.prog-label{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;text-align:center;}
+.prog-track{background:#e4e0f0;border-radius:20px;height:10px;overflow:hidden;margin-bottom:6px;}
+.prog-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--blue),var(--purple));width:0%;transition:width .5s ease;}
+.prog-sub{font-size:11.5px;color:var(--grey);text-align:center;}
+.prog-steps{display:flex;justify-content:space-between;margin-top:10px;}
+.prog-step{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+.prog-step-dot{width:10px;height:10px;border-radius:50%;background:var(--line);transition:background .3s;}
+.prog-step-dot.done{background:var(--green);}
+.prog-step-dot.active{background:var(--orange);animation:pulse .8s infinite;}
+.prog-step-lbl{font-size:9.5px;color:var(--grey);text-align:center;line-height:1.3;}
+.prog-step-lbl.done{color:var(--green);font-weight:600;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── SHARE BUTTON ──────────────────────────────────────────────── */
+.share-btn{background:linear-gradient(135deg,#633a96,#3a2d7d);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;font-family:'Rubik';cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-top:8px;}
+.share-btn:hover{opacity:.9;}
+
+/* ── SHARE GUIDE MODAL ─────────────────────────────────────────── */
+#shareModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1001;align-items:center;justify-content:center;padding:24px;}
+#shareModal.open{display:flex;}
+.sm-box{background:#fff;border-radius:18px;overflow:hidden;max-width:600px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.3);}
+.sm-hdr{background:linear-gradient(135deg,var(--blue),var(--deep));padding:20px 26px;color:#fff;}
+.sm-hdr h2{font-size:17px;font-weight:800;margin-bottom:3px;}
+.sm-hdr p{font-size:12px;color:#cfc7ec;}
+.sm-body{padding:22px 26px;}
+.sm-step{display:flex;gap:13px;margin-bottom:16px;align-items:flex-start;}
+.sm-num{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-family:'Exo 2';font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.sm-step h4{font-size:13px;font-weight:700;margin-bottom:4px;}
+.sm-step p{font-size:11.5px;color:var(--grey);line-height:1.6;}
+.sm-step code{background:#f0edf7;color:var(--blue);padding:1px 6px;border-radius:4px;font-family:'Roboto Mono';font-size:11px;}
+.sm-hr{border:none;border-top:1px solid var(--line);margin:4px 0 16px;}
+.sm-opt{border:1.5px solid var(--line);border-radius:11px;padding:13px 16px;margin-bottom:10px;}
+.sm-opt.rec{border-color:var(--purple);background:#faf7ff;}
+.sm-opt-hdr{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.sm-opt-hdr span{font-size:17px;}
+.sm-opt-hdr h4{font-size:13px;font-weight:700;flex:1;}
+.sm-rec{background:#efeaf9;color:var(--purple);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.sm-opt ol{font-size:11.5px;color:var(--grey);line-height:1.8;padding-left:18px;margin-top:4px;}
+.sm-foot{padding:14px 26px;background:#f7f5fb;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;align-items:center;}
+.sm-tip{font-size:11px;color:var(--grey);flex:1;}
+.sm-dl-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:12.5px;font-weight:700;font-family:'Rubik';cursor:pointer;}
+.sm-dl-btn:hover{background:var(--deep);}
+.sm-cancel{background:transparent;color:var(--grey);border:1.5px solid var(--line);border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:600;font-family:'Rubik';cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- ══ UPLOAD SCREEN ══════════════════════════════════════════════ -->
+<div id="uploadScreen" style="display: none;">
+  <div class="up-hdr">
+    <div class="halo-bg"></div>
+    <div class="up-brand"><div class="up-mark"></div><span>VCreaTek | FUEL DECISIONS · AMPLIFY IMPACT</span></div>
+    <div class="up-title">Deal Pipeline Report</div>
+    <div class="up-sub">Upload your two Zoho CRM Excel exports — full dashboard builds instantly in your browser</div>
+  </div>
+  <div class="up-body">
+    <div class="up-card">
+      <h2>Every Friday — 3 Steps</h2>
+      <p class="up-hint">① Download both Excel files from Zoho CRM &nbsp;·&nbsp; ② Drop them below &nbsp;·&nbsp; ③ Click Generate</p>
+      <div class="zones">
+        <div class="zone loaded" id="zoneP" ondragover="drag(event,'P')" ondragleave="undrag('P')" ondrop="drop(event,'P')">
+          <div class="zone-icon">📦</div>
+          <h3>Products Pipeline</h3>
+          <p>01 — SCY Platform</p>
+          <div class="fname" id="fnameP" style="color: var(--green);">Product Pipelines_2026_07_22.csv</div>
+          <div class="zbadge" id="badgeP">✓ Ready — Products (01 — PRODUCTS)</div>
+          <div class="zerr" id="zerrP"></div>
+          <button class="zswap-btn" id="zswapP" onclick="swapFile('P')">Move to Services zone →</button>
+          <input type="file" accept=".xlsx,.xls" onchange="pick(event,'P')">
+        </div>
+        <div class="zone loaded" id="zoneS" ondragover="drag(event,'S')" ondragleave="undrag('S')" ondrop="drop(event,'S')">
+          <div class="zone-icon">🛠</div>
+          <h3>Services Pipeline</h3>
+          <p>02 — Consulting / Data Services</p>
+          <div class="fname" id="fnameS" style="color: var(--green);">Service Pipelines_2026_07_22.csv</div>
+          <div class="zbadge" id="badgeS">✓ Ready — Services (02 — CONSULTING)</div>
+          <div class="zerr" id="zerrS"></div>
+          <button class="zswap-btn" id="zswapS" onclick="swapFile('S')">← Move to Products zone</button>
+          <input type="file" accept=".xlsx,.xls" onchange="pick(event,'S')">
+        </div>
+      </div>
+      <button class="gen-btn" id="genBtn" onclick="generate()" style="display: none;">Generate Dashboard →</button>
+
+      <!-- PROGRESS BAR -->
+      <div id="progressWrap" style="display: block;">
+        <div class="prog-label" id="progLabel">Done!</div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width: 100%;"></div></div>
+        <div class="prog-sub" id="progSub">Your dashboard is ready.</div>
+        <div class="prog-steps">
+          <div class="prog-step"><div class="prog-step-dot done" id="ps0"></div><div class="prog-step-lbl done" id="pl0">Reading<br>files</div></div>
+          <div class="prog-step"><div class="prog-step-dot done" id="ps1"></div><div class="prog-step-lbl done" id="pl1">Processing<br>data</div></div>
+          <div class="prog-step"><div class="prog-step-dot done" id="ps2"></div><div class="prog-step-lbl done" id="pl2">Building<br>charts</div></div>
+          <div class="prog-step"><div class="prog-step-dot active" id="ps3"></div><div class="prog-step-lbl" id="pl3">Ready</div></div>
+        </div>
+      </div>
+
+      <p class="up-note">Everything runs in your browser. No installation needed. No data leaves your computer.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SPINNER ════════════════════════════════════════════════════ -->
+<div id="spinner">
+  <div class="spin"></div>
+  <p>Building your dashboard…</p>
+</div>
+
+<!-- ══ DASHBOARD ══════════════════════════════════════════════════ -->
+<div id="dashScreen" style="display: block;">
+  <header>
+    <div class="halo"></div>
+    <div class="hrow">
+      <div>
+        <div class="brand"><div class="mark"></div><span class="brand-txt">VCreaTek | FUEL DECISIONS · AMPLIFY IMPACT</span></div>
+        <div class="dh1">Deal Pipeline Report</div>
+        <div class="tagline" id="hTagline">Combined View · Products + Services</div>
+      </div>
+      <div class="asof">
+        <b id="hDate">Report Date: 22 Jul 2026</b>
+        <span id="hFiles" style="font-size:11px;opacity:.7">Product Pipelines_2026_07_22.csv<br>Service Pipelines_2026_07_22.csv</span>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="reload-btn" onclick="reloadFiles()">↺ Load New Files</button>
+          <button class="dl-btn" onclick="downloadCombined()">⬇ Download Combined Excel</button>
+          <button class="share-btn" onclick="openShareGuide()">🌐 Get Shareable Link (Snapshot)</button>
+          <button class="exp-btn" onclick="openExport()">📄 Export PDF Summary</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PIPELINE TOGGLE -->
+  <div class="pipeline-toggle-bar">
+    <span>View:</span>
+    <button class="ptog active" id="tog-all" onclick="setToggle('all')">🔀 All Pipelines</button>
+    <button class="ptog" id="tog-prod" onclick="setToggle('prod')">📦 Products — SCY Platform</button>
+    <button class="ptog" id="tog-svc" onclick="setToggle('svc')">🛠 Services — Consulting</button>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="fbar">
+    <div class="fg"><label>Stage</label>
+      <select id="fStg" onchange="applyF()"><option value="">All Stages</option><option value="Closed Lost">Closed Lost</option><option value="Closed Won">Closed Won</option><option value="Discovery In Progress">Discovery In Progress</option><option value="Initial Contact Established">Initial Contact Established</option><option value="Negotiation">Negotiation</option><option value="Opportunity Identified">Opportunity Identified</option><option value="Proposal Submitted">Proposal Submitted</option><option value="Qualified">Qualified</option><option value="Verbal Commitment">Verbal Commitment</option></select></div>
+    <div class="fg"><label>Region</label>
+      <select id="fReg" onchange="applyF()"><option value="">All Regions</option><option value="APAC">APAC</option><option value="Europe">Europe</option><option value="Global">Global</option><option value="India">India</option><option value="MENA">MENA</option><option value="North America">North America</option></select></div>
+    <div class="fg"><label>Owner</label>
+      <select id="fOwn" onchange="applyF()"><option value="">All Owners</option><option value="Amey Oak">Amey Oak</option><option value="Anup Mudugal">Anup Mudugal</option><option value="Edwin Samuel">Edwin Samuel</option><option value="Harsh Mestri">Harsh Mestri</option><option value="Manoo Haryal">Manoo Haryal</option><option value="Mrinalini Vishnu Priya">Mrinalini Vishnu Priya</option></select></div>
+    <div class="fg"><label>Status</label>
+      <select id="fSts" onchange="applyF()">
+        <option value="">All Statuses</option>
+        <option value="Active">Active</option>
+        <option value="On Hold">On Hold</option>
+        <option value="Closed Won">Closed Won</option>
+        <option value="Closed Lost">Closed Lost</option>
+      </select></div>
+    <span class="cpill" id="fcnt">49 deals shown</span>
+    <button class="rst" onclick="resetF()">↺ Reset Filters</button>
+  </div>
+
+  <main>
+    <!-- KPI GRID -->
+    <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi" style="--accent:var(--blue)">
+      <div class="label">Total Deals</div>
+      <div class="value">49</div>
+      <div class="sub">34 open · 4 won · 4 lost</div>
+    </div>
+    <div class="kpi" style="--accent:var(--mint)">
+      <div class="label">Active / Open</div>
+      <div class="value">34</div>
+      <div class="sub">69% of visible pipeline</div>
+    </div>
+    <div class="kpi" style="--accent:var(--ice)">
+      <div class="label">Win Rate</div>
+      <div class="value">50%</div>
+      <div class="sub">4 won of 8 decided</div>
+    </div>
+    <div class="kpi" style="--accent:var(--orange)">
+      <div class="label">On Hold / At Risk</div>
+      <div class="value">7</div>
+      <div class="sub">Stalled — needs a decision</div>
+    </div>
+    <div class="kpi" style="--accent:var(--purple)">
+      <div class="label">New (Last 30 Days)</div>
+      <div class="value">7</div>
+      <div class="sub">Opportunities created recently</div>
+    </div></div>
+
+    <!-- OVERVIEW -->
+    <div class="section-title"><h2>Pipeline Overview</h2><div class="dash"></div><span class="badge" id="overviewBadge">COMBINED</span></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Pipeline by Stage Funnel</h3>
+        <p class="desc">Where deals sit right now, from first contact to close.</p>
+        <div class="chart-wrap tall"><canvas id="stageChart" width="921" height="450" style="display: block; box-sizing: border-box; height: 300px; width: 614px;"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Win / Loss / Open Mix</h3>
+        <p class="desc">Outcome split across the full deal book.</p>
+        <div class="chart-wrap tall"><canvas id="outcomeChart" width="692" height="450" style="display: block; box-sizing: border-box; height: 300px; width: 461px;"></canvas></div>
+      </div>
+    </div>
+    <div class="grid3" id="overviewGrid3">
+      <div class="panel">
+        <h3>Pipeline by Region</h3>
+        <p class="desc">Geographic concentration of deals.</p>
+        <div class="chart-wrap"><canvas id="regionChart" width="506" height="375" style="display: block; box-sizing: border-box; height: 250px; width: 337px;"></canvas></div>
+      </div>
+      <div class="panel" id="typePanelWrap">
+        <h3>Offering Mix</h3>
+        <p class="desc">SCY Platform vs. Data Services distribution.</p>
+        <div class="chart-wrap"><canvas id="typeChart" width="506" height="375" style="display: block; box-sizing: border-box; height: 250px; width: 337px;"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Lead Source Effectiveness</h3>
+        <p class="desc">Where the open pipeline is originating from.</p>
+        <div class="chart-wrap"><canvas id="sourceChart" width="506" height="375" style="display: block; box-sizing: border-box; height: 250px; width: 337px;"></canvas></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:18px">
+      <h3>Opportunity Creation Trend — Flight Path</h3>
+      <p class="desc">New opportunities logged by month created.</p>
+      <div class="chart-wrap tall"><canvas id="trendChart" width="1708" height="450" style="display: block; box-sizing: border-box; height: 300px; width: 1139px;"></canvas></div>
+    </div>
+
+    <!-- PIPELINE SPLIT BY OFFERING -->
+    <div class="section-title"><h2>Pipeline Split by Offering</h2><div class="dash"></div></div>
+    <p class="caption-note">Status breakdown for each pipeline. Region, Stage, and GCC distribution are covered in the charts above.</p>
+    <div class="grid2-even" id="offeringBlocks">
+      <div class="offering-block ds" id="dsBlock">
+        <h2><span class="dot"></span>Services Pipeline — Data Services / Consulting</h2>
+        <div class="mini-panel"><h4>Status</h4><div class="chart-wrap mini"><canvas id="dsStatusChart" width="775" height="255" style="display: block; box-sizing: border-box; height: 170px; width: 516px;"></canvas></div></div>
+      </div>
+      <div class="offering-block scy" id="scyBlock">
+        <h2><span class="dot"></span>Products Pipeline — SCY Platform</h2>
+        <div class="mini-panel"><h4>Status</h4><div class="chart-wrap mini"><canvas id="scyStatusChart" width="775" height="255" style="display: block; box-sizing: border-box; height: 170px; width: 516px;"></canvas></div></div>
+      </div>
+    </div>
+
+        <!-- NEEDS ATTENTION -->
+    <div class="section-title"><h2>Needs Attention</h2><div class="dash"></div><span class="badge" id="ohBadge" style="background:var(--amber)">7 ON HOLD</span></div>
+    <p class="caption-note">Deals currently on hold or stale (no activity for 30+ days).</p>
+    <div class="twrap" style="margin-bottom:22px">
+      <table>
+        <thead><tr>
+          <th>Deal / Company</th><th>Owner</th><th>Pipeline</th><th>Stage</th>
+          <th>Region</th><th>Status</th><th>Last Activity</th><th style="text-align:center">Days Stale</th>
+        </tr></thead>
+        <tbody id="ohBody"><tr>
+      <td><b>CIPLA | SCY Platform- Distribution Optimisation</b><div class="sub-txt">cipla</div></td>
+      <td>Anup Mudugal</td>
+      <td><span class="pill pill-p">Products</span></td>
+      <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+      <td>APAC</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">22 Apr 2026</td>
+      <td style="text-align:center"><span class="stale">91d</span></td>
+    </tr><tr>
+      <td><b>Megawecare | VCreatek Overall Offering</b><div class="sub-txt">Megawecare</div></td>
+      <td>Anup Mudugal</td>
+      <td><span class="pill pill-p">Products</span></td>
+      <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+      <td>APAC</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">02 Apr 2026</td>
+      <td style="text-align:center"><span class="stale">111d</span></td>
+    </tr><tr>
+      <td><b>Alkem Labs | SCY Platform - Master Planning</b><div class="sub-txt">Alkem Laboratories Ltd</div></td>
+      <td>Manoo Haryal</td>
+      <td><span class="pill pill-p">Products</span></td>
+      <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+      <td>APAC</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">02 Apr 2026</td>
+      <td style="text-align:center"><span class="stale">111d</span></td>
+    </tr><tr>
+      <td><b>Nilkamal -SCY - Supply Chain Planning (Master Planning)</b><div class="sub-txt">Nilkamal</div></td>
+      <td>Manoo Haryal</td>
+      <td><span class="pill pill-p">Products</span></td>
+      <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+      <td>India</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">13 Apr 2026</td>
+      <td style="text-align:center"><span class="stale">100d</span></td>
+    </tr><tr>
+      <td><b>Intas Pharmaceuticals :SCY Platform</b><div class="sub-txt">Intas Pharmaceuticals</div></td>
+      <td>Manoo Haryal</td>
+      <td><span class="pill pill-p">Products</span></td>
+      <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+      <td>India</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">17 Jul 2026</td>
+      <td style="text-align:center">5d</td>
+    </tr><tr>
+      <td><b>Magnum Ice Cream- Services-GCC</b><div class="sub-txt">Magnum Ice Cream</div></td>
+      <td>Mrinalini Vishnu Priya</td>
+      <td><span class="pill pill-s">Services</span></td>
+      <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+      <td>India</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">02 Jun 2026</td>
+      <td style="text-align:center"><span class="stale">50d</span></td>
+    </tr><tr>
+      <td><b>Digital Realty-Data Vizualization</b><div class="sub-txt">Digital Realty</div></td>
+      <td>Edwin Samuel</td>
+      <td><span class="pill pill-s">Services</span></td>
+      <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+      <td>North America</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">27 Mar 2026</td>
+      <td style="text-align:center"><span class="stale">117d</span></td>
+    </tr></tbody>
+      </table>
+    </div>
+
+    <!-- DEAL EXPLORER -->
+    <div class="section-title"><h2>Deal Explorer</h2><div class="dash"></div></div>
+    <div class="srow">
+      <input type="text" id="tsearch" placeholder="🔍 Search deal, company, owner…" oninput="rTable()">
+      <span class="cpill" id="tcnt">49 deals</span>
+    </div>
+    <div class="twrap">
+      <table>
+        <thead><tr>
+          <th onclick="srt('name')">Deal Name ▾</th>
+          <th onclick="srt('company')">Company ▾</th>
+          <th onclick="srt('owner')">Owner ▾</th>
+          <th onclick="srt('status')">Status ▾</th>
+          <th onclick="srt('src')">Pipeline ▾</th>
+          <th onclick="srt('stage')">Stage ▾</th>
+          <th onclick="srt('region')">Region ▾</th>
+          <th onclick="srt('prob')">Prob% ▾</th>
+          <th onclick="srt('odt')">Opp Date ▾</th>
+          <th onclick="srt('cdt')">Close Date ▾</th>
+        </tr></thead>
+        <tbody id="tbody"><tr>
+    <td><b style="font-size:12.5px">Ace Designers-SCY</b></td>
+    <td>Ace Designers Ltd</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+    <td>India</td>
+    <td style="text-align:center">55%</td>
+    <td style="font-size:11.5px;color:var(--grey)">07 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Aug 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Airworks</b></td>
+    <td>Air Works India</td>
+    <td>Amey Oak</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#4ec9b018;color:#4ec9b0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Discovery In Progress</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">03 Jul 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Nov 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Alkem Labs | SCY Platform - Master Planning</b></td>
+    <td>Alkem Laboratories Ltd</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">06 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Asian Paints | SCY Platform</b></td>
+    <td>Asian Paints</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">07 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">01 Sept 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Autoneum | SCY Platform - Production Planning &amp; Production Scheduling</b></td>
+    <td>Autoneum</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill plost">Closed Lost</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#be213918;color:#be2139;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Lost</span></td>
+    <td>Europe</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">11 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Bangalore Airport Services Ltd</b></td>
+    <td>Bangalore Airport Services Ltd</td>
+    <td>Amey Oak</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">16 Jul 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">BKT Tyres</b></td>
+    <td>BKT Tires</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>India</td>
+    <td style="text-align:center">70%</td>
+    <td style="font-size:11.5px;color:var(--grey)">01 Aug 2025</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">BOSCH | SCY Platform-Demand Sensing</b></td>
+    <td>Bosch</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill plost">Closed Lost</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#be213918;color:#be2139;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Lost</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">10 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Cargill-Data Migration</b></td>
+    <td>Cargill</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">70%</td>
+    <td style="font-size:11.5px;color:var(--grey)">06 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Jul 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Cargill-PowerBI</b></td>
+    <td>Cargill</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">70%</td>
+    <td style="font-size:11.5px;color:var(--grey)">06 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Jul 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Cencora | Forecasting Engine and Comparison</b></td>
+    <td>Cencora</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">25%</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">15 May 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">CIPLA | SCY Platform- Distribution Optimisation</b></td>
+    <td>cipla</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">10 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Digital Realty-Data Vizualization</b></td>
+    <td>Digital Realty</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+    <td>North America</td>
+    <td style="text-align:center">40%</td>
+    <td style="font-size:11.5px;color:var(--grey)">05 Nov 2025</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">DR Reddy Labs-Semantic Model</b></td>
+    <td>Dr. Reddy Labs</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">40%</td>
+    <td style="font-size:11.5px;color:var(--grey)">01 Oct 2025</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Apr 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Dr. Reddy Labs-SCY Platform</b></td>
+    <td>Dr. Reddy Labs</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">40%</td>
+    <td style="font-size:11.5px;color:var(--grey)">01 Oct 2025</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Everlife | SCY Platform - Demand Planning, Master planning and Power BI Dashboard</b></td>
+    <td>Everlife</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">05 Feb 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Apr 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Expleo-Services-GCC</b></td>
+    <td>Expleo</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>India</td>
+    <td style="text-align:center">95%</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Oct 2025</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Jun 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">EY - Licence Resell - Gurobi</b></td>
+    <td>EY</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pwon">Closed Won</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#2f8b4518;color:#2f8b45;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Won</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">100%</td>
+    <td style="font-size:11.5px;color:var(--grey)">12 Feb 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Fly Cloud Tech</b></td>
+    <td>Fly Cloud Tech</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>North America</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">21 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Jul 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">GMG Group | VCreatek Overall Offering</b></td>
+    <td>GMG group</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>MENA</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">16 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">HP | VCreaTek Overall Offering</b></td>
+    <td>HP</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill plost">Closed Lost</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#be213918;color:#be2139;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Lost</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">11 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">HUF Group | SCY Platform-Supply Chain Planning, Production Scheduling</b></td>
+    <td>Huf</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill plost">Closed Lost</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#be213918;color:#be2139;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Lost</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">09 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">HUL-Agentic AI</b></td>
+    <td>Hindustan Unilever</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">55%</td>
+    <td style="font-size:11.5px;color:var(--grey)">01 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Jul 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Indian Navy Indian Railways Gurobi Optimization</b></td>
+    <td>Indian Navy</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">21 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Aug 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Intas Pharmaceuticals :SCY Platform</b></td>
+    <td>Intas Pharmaceuticals</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">21 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Jul 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">J&amp;J BPO Set up at Bangalore</b></td>
+    <td>Johnson &amp; Johnson</td>
+    <td>Amey Oak</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>Global</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">02 Jul 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">J&amp;J MedTech SC Transformation Office</b></td>
+    <td>Johnson &amp; Johnson (MedTech)</td>
+    <td>Harsh Mestri</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>North America</td>
+    <td style="text-align:center">25%</td>
+    <td style="font-size:11.5px;color:var(--grey)">24 Jun 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Kenvue SG -SC consulting opportunity</b></td>
+    <td>Kenvue SG</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Kenvue- PBI</b></td>
+    <td>Kenvue</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+    <td>India</td>
+    <td style="text-align:center">55%</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Kenvue-3 - K Cloud Migration - Roles_16</b></td>
+    <td>Kenvue</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pwon">Closed Won</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#2f8b4518;color:#2f8b45;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Won</span></td>
+    <td>India</td>
+    <td style="text-align:center">85%</td>
+    <td style="font-size:11.5px;color:var(--grey)">12 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">21 May 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Kenvue-DNA-67</b></td>
+    <td>Kenvue</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#633a9618;color:#633a96;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Verbal Commitment</span></td>
+    <td>India</td>
+    <td style="text-align:center">85%</td>
+    <td style="font-size:11.5px;color:var(--grey)">19 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">14 May 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Kenvue-DNA-BA-30</b></td>
+    <td>Kenvue</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#633a9618;color:#633a96;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Verbal Commitment</span></td>
+    <td>India</td>
+    <td style="text-align:center">85%</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">L&amp;T TECHNOLOGY SERVICES- Data Service- Data Strategy</b></td>
+    <td>Larsen and Toubro shared seevices</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>India</td>
+    <td style="text-align:center">55%</td>
+    <td style="font-size:11.5px;color:var(--grey)">26 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 May 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Magnum Ice Cream- Services-GCC</b></td>
+    <td>Magnum Ice Cream</td>
+    <td>Mrinalini Vishnu Priya</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+    <td>India</td>
+    <td style="text-align:center">25%</td>
+    <td style="font-size:11.5px;color:var(--grey)">08 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Jun 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Megawecare | VCreatek Overall Offering</b></td>
+    <td>Megawecare</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">10 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Nilkamal -SCY - Supply Chain Planning (Master Planning)</b></td>
+    <td>Nilkamal</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill ponhold">On Hold</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">15 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Apr 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Northern Trust-Services-GCC</b></td>
+    <td>Northern Trust .</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#4ec9b018;color:#4ec9b0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Discovery In Progress</span></td>
+    <td>India</td>
+    <td style="text-align:center">25%</td>
+    <td style="font-size:11.5px;color:var(--grey)">15 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Jun 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">o9 Soltuions</b></td>
+    <td>o9 Solutions</td>
+    <td>Amey Oak</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>India</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">16 Jul 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Parksons packaging</b></td>
+    <td>Parksons Packaging</td>
+    <td>Amey Oak</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">16 Jul 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">PepsiCo-Data Services-AgenticAI</b></td>
+    <td>PepsiCo</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">10 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Jul 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Philips</b></td>
+    <td>Philips</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>India</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">25 Dec 2025</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Philips Forecasting</b></td>
+    <td>Philips</td>
+    <td>Anup Mudugal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#f5823218;color:#f58232;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Proposal Submitted</span></td>
+    <td>India</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">PI Industries-Data Vizualization-GCC</b></td>
+    <td>PI Industries</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#e8c54718;color:#e8c547;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Qualified</span></td>
+    <td>India</td>
+    <td style="text-align:center">40%</td>
+    <td style="font-size:11.5px;color:var(--grey)">14 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 May 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Reise Mitas Tires | SCY Platform</b></td>
+    <td>Reise Mitas Tires LLP</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#86c88318;color:#86c883;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Initial Contact Established</span></td>
+    <td>India</td>
+    <td style="text-align:center">10%</td>
+    <td style="font-size:11.5px;color:var(--grey)">01 Apr 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">02 Apr 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Stryker | SCY Platform Demand Planning &amp; Supply Chain Planning (Master Planning)</b></td>
+    <td>Stryker</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#3a2d7d18;color:#3a2d7d;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Negotiation</span></td>
+    <td>APAC</td>
+    <td style="text-align:center">40%</td>
+    <td style="font-size:11.5px;color:var(--grey)">12 Feb 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Mar 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Tata Communication-Domestic</b></td>
+    <td>Tata Communication</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#4ec9b018;color:#4ec9b0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Discovery In Progress</span></td>
+    <td>India</td>
+    <td style="text-align:center">40%</td>
+    <td style="font-size:11.5px;color:var(--grey)">07 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">30 Jun 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">TEVA PHARMA - Data Technology</b></td>
+    <td>Teva Pharmaceuticals,NJ</td>
+    <td>Manoo Haryal</td>
+    <td><span class="pill pwon">Closed Won</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#2f8b4518;color:#2f8b45;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Won</span></td>
+    <td>North America</td>
+    <td style="text-align:center">—</td>
+    <td style="font-size:11.5px;color:var(--grey)">10 Mar 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">29 May 2026</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">TPac Packaging India Pvt Ltd</b></td>
+    <td>Tpac Packaging India Pvt Ltd</td>
+    <td>Amey Oak</td>
+    <td><span class="pill pactive">Active</span></td>
+    <td><span class="pill pill-p">SCY Platform</span></td>
+    <td><span style="background:#7ed3f018;color:#7ed3f0;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Opportunity Identified</span></td>
+    <td>India</td>
+    <td style="text-align:center">15%</td>
+    <td style="font-size:11.5px;color:var(--grey)">16 Jul 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">—</td>
+  </tr><tr>
+    <td><b style="font-size:12.5px">Welspun</b></td>
+    <td>Welspun</td>
+    <td>Edwin Samuel</td>
+    <td><span class="pill pwon">Closed Won</span></td>
+    <td><span class="pill pill-s">Data Services</span></td>
+    <td><span style="background:#2f8b4518;color:#2f8b45;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">Closed Won</span></td>
+    <td>India</td>
+    <td style="text-align:center">100%</td>
+    <td style="font-size:11.5px;color:var(--grey)">15 Jan 2026</td>
+    <td style="font-size:11.5px;color:var(--grey)">31 Oct 2026</td>
+  </tr></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════════════
+const STAGES=[
+  'Opportunity Identified','Initial Contact Established','Discovery In Progress',
+  'Qualified','Proposal Submitted','Verbal Commitment','Negotiation',
+  'On Hold','Closed Won','Closed Lost'
+];
+const STAGE_COLORS={
+  'Opportunity Identified':'#7ed3f0','Initial Contact Established':'#86c883',
+  'Discovery In Progress':'#4ec9b0','Qualified':'#e8c547',
+  'Proposal Submitted':'#f58232','Verbal Commitment':'#633a96',
+  'Negotiation':'#3a2d7d','On Hold':'#6d6784','Closed Won':'#2f8b45','Closed Lost':'#be2139'
+};
+const STATUS_COLORS={'Active':'#3a2d7d','On Hold':'#d97706','Closed Won':'#86c883','Closed Lost':'#be2139','Closed':'#6d6784'};
+const VMAP={
+  'upto 50k':25000,'Upto 50K':25000,'50K-100K':75000,'51K-100K':75000,
+  '100K-250K':175000,'101K-250K':175000,'101K- 250K':175000,
+  '250K-500K':375000,'251K-500K':375000,'500K-1M':750000,
+  '501K-1M':750000,'501K- 1M':750000,'1M-5M':3000000,'5M-10M':7500000,'>10M':12500000
+};
+const PALETTE=['#3a2d7d','#f58232','#be2139','#633a96','#7ed3f0','#86c883','#e8c547','#4ec9b0','#c586c0','#9cdcfe'];
+const REGION_TYPE_MAP={
+  'MENA':'GCC','North America':'USA','India':'Non GCC',
+  'APAC':'Non GCC','Europe':'Non GCC','Global':'Unassigned'
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  UPLOAD STATE
+// ═══════════════════════════════════════════════════════════════════
+let fileP=null,fileS=null;
+let ALL_DEALS=[];
+let pRawRows=[],sRawRows=[]; // raw Excel rows kept for combined export
+let currentToggle='all'; // 'all' | 'prod' | 'svc'
+let sortCol='name',sortDir=1;
+let charts={};
+
+function drag(e,t){e.preventDefault();document.getElementById('zone'+t).classList.add('drag');}
+function undrag(t){document.getElementById('zone'+t).classList.remove('drag');}
+function drop(e,t){e.preventDefault();undrag(t);const f=e.dataTransfer.files[0];if(f)setFile(f,t);}
+function pick(e,t){const f=e.target.files[0];if(f)setFile(f,t);}
+
+// ── Detect pipeline type by reading Pipeline column in first 5 rows ──
+function sniffPipeline(file){
+  return new Promise(res=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',sheetRows:6});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        for(const row of rows){
+          for(const[k,v] of Object.entries(row)){
+            if(k.toLowerCase().includes('pipeline')&&!k.endsWith('.id')){
+              const val=String(v).toUpperCase();
+              if(val.includes('PRODUCT')||val.includes('01-'))return res('products');
+              if(val.includes('CONSULT')||val.includes('SERVICE')||val.includes('02-'))return res('services');
+            }
+          }
+        }
+        res('unknown');
+      }catch{res('unknown');}
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ── Reset a zone to neutral state ────────────────────────────────────
+function resetZone(t){
+  const zone=document.getElementById('zone'+t);
+  zone.classList.remove('loaded','error','checking');
+  document.getElementById('fname'+t).textContent='No file selected';
+  document.getElementById('fname'+t).style.color='var(--green)';
+  document.getElementById('badge'+t).textContent='Waiting';
+  document.getElementById('zerr'+t).textContent='';
+  if(t==='P')fileP=null;else fileS=null;
+}
+
+// ── Swap: move the errored file to the correct zone ──────────────────
+let pendingSwapFile={P:null,S:null};
+function swapFile(fromZone){
+  const toZone=fromZone==='P'?'S':'P';
+  const f=pendingSwapFile[fromZone];
+  if(!f)return;
+  pendingSwapFile[fromZone]=null;
+  resetZone(fromZone);
+  setFile(f,toZone);
+}
+
+// ── Main file setter with pipeline validation ────────────────────────
+async function setFile(f,t){
+  const expected=t==='P'?'products':'services';
+  const expectedLabel=t==='P'?'Products (01 — PRODUCTS)':'Services (02 — CONSULTING)';
+  const otherLabel=t==='P'?'Services (02 — CONSULTING)':'Products (01 — PRODUCTS)';
+  const otherZone=t==='P'?'S':'P';
+
+  // Show checking state
+  const zone=document.getElementById('zone'+t);
+  zone.classList.remove('loaded','error');
+  zone.classList.add('checking');
+  document.getElementById('fname'+t).textContent=f.name;
+  document.getElementById('badge'+t).textContent='⏳ Checking file…';
+  document.getElementById('zerr'+t).textContent='';
+  document.getElementById('genBtn').disabled=true;
+
+  const detected=await sniffPipeline(f);
+
+  zone.classList.remove('checking');
+
+  // ── WRONG FILE ────────────────────────────────────────────────────
+  if(detected!=='unknown'&&detected!==expected){
+    zone.classList.add('error');
+    document.getElementById('badge'+t).textContent='⚠ Wrong pipeline file';
+    document.getElementById('fname'+t).style.color='var(--red)';
+    document.getElementById('zerr'+t).textContent=
+      `This file belongs to the ${otherLabel} pipeline. Please upload it to the "${otherLabel.split('(')[0].trim()}" zone on the ${otherZone==='P'?'left':'right'}.`;
+    pendingSwapFile[t]=f;
+    if(t==='P')fileP=null;else fileS=null;
+    document.getElementById('genBtn').disabled=true;
+    return;
+  }
+
+  // ── UNKNOWN (could not detect) — accept with a caution note ──────
+  if(detected==='unknown'){
+    zone.classList.add('loaded');
+    document.getElementById('fname'+t).style.color='var(--amber)';
+    document.getElementById('badge'+t).textContent='⚠ Accepted (unverified)';
+    document.getElementById('zerr'+t).textContent='';
+  } else {
+    // ── CORRECT FILE ───────────────────────────────────────────────
+    zone.classList.add('loaded');
+    document.getElementById('fname'+t).style.color='var(--green)';
+    document.getElementById('badge'+t).textContent='✓ Ready — '+expectedLabel;
+    document.getElementById('zerr'+t).textContent='';
+  }
+
+  if(t==='P')fileP=f;else fileS=f;
+  pendingSwapFile[t]=null;
+  document.getElementById('genBtn').disabled=!(fileP&&fileS);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  DATA PROCESSING
+// ═══════════════════════════════════════════════════════════════════
+function xlDate(v){
+  if(v===undefined||v===null||v==='')return'';
+  if(typeof v==='number'&&v>1){
+    const d=new Date(Math.round((v-25569)*86400*1000));
+    return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  if(v instanceof Date)return v.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  return String(v).substring(0,10);
+}
+function parseVal(b){
+  if(!b&&b!==0)return 0;
+  const s=String(b).trim();
+  for(const[k,v]of Object.entries(VMAP))if(k.toLowerCase()===s.toLowerCase())return v;
+  return 0;
+}
+function parseProb(v){
+  try{const f=parseFloat(v);return isNaN(f)?0:Math.round(f<=1?f*100:f);}catch{return 0;}
+}
+function normStatus(row){
+  const stage=(row['Stage']||'').toUpperCase();
+  const status=row['Deal Status']||'';
+  const tag=(row['Tag']||'').toUpperCase();
+  if(stage.includes('WON'))return'Closed Won';
+  if(stage.includes('LOST'))return'Closed Lost';
+  if(status==='On Hold'||tag.includes('ON HOLD'))return'On Hold';
+  if(status==='Closed')return'Closed';
+  return'Active';
+}
+function daysSince(d){
+  if(!d)return null;
+  try{
+    const p=d.split(' ');if(p.length!==3)return null;
+    const m={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    return Math.floor((new Date()-new Date(p[2],m[p[1]],parseInt(p[0])))/(86400000));
+  }catch{return null;}
+}
+function oppMonth(d){
+  if(!d)return'';
+  const p=d.split(' ');return p.length===3?p[1]+' '+p[2]:'';
+}
+
+function readXlsx(file,srcLabel){
+  return new Promise((res,rej)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        const clean=rows.map(row=>{
+          const r={};
+          for(const[k,v]of Object.entries(row)){if(!k.endsWith('.id'))r[k]=v;}
+          return r;
+        });
+        res({
+          rawRows: clean,
+          deals: clean.map(row=>{
+          const adt=xlDate(row['Last Activity Time']);
+          const odt=xlDate(row['Opportunity Creation Date']);
+          return{
+            name:   String(row['Deal Name']||''),
+            company:String(row['Company Name']||''),
+            owner:  String(row['Deal Owner']||''),
+            stage:  String(row['Stage']||''),
+            region: String(row['Region']||''),
+            regionType: REGION_TYPE_MAP[String(row['Region']||'').trim()]||'Unassigned',
+            leadSrc:String(row['Lead Source']||''),
+            src:    srcLabel,
+            type:   srcLabel==='Products'?'SCY Platform':'Data Services',
+            status: normStatus(row),
+            prob:   parseProb(row['Deal Probability %']),
+            odt,
+            cdt:    xlDate(row['Closing Date']),
+            adt,
+            age:    daysSince(adt),
+            month:  oppMonth(odt),
+            isNew:  (daysSince(odt)||999)<=30,
+          };
+        })
+        }); // end res({rawRows, deals})
+      }catch(err){rej(err);}
+    };
+    reader.onerror=rej;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GENERATE
+// ═══════════════════════════════════════════════════════════════════
+// ── Progress helpers ──────────────────────────────────────────────
+function setProgress(pct, label, sub, stepDone){
+  document.getElementById('progFill').style.width = pct+'%';
+  document.getElementById('progLabel').textContent = label;
+  document.getElementById('progSub').textContent = sub;
+  // update step dots
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('ps'+i);
+    const lbl=document.getElementById('pl'+i);
+    if(i < stepDone){dot.classList.remove('active');dot.classList.add('done');lbl.classList.add('done');}
+    else if(i===stepDone){dot.classList.add('active');dot.classList.remove('done');}
+    else{dot.classList.remove('active','done');}
+  }
+}
+
+async function generate(){
+  // Show progress bar, hide generate button
+  document.getElementById('genBtn').style.display='none';
+  document.getElementById('progressWrap').style.display='block';
+  setProgress(10,'Reading files…','Loading Products and Services pipelines…',0);
+
+  try{
+    // Step 1 — read products
+    setProgress(20,'Reading Products file…','Parsing Excel data…',0);
+    const pResult = await readXlsx(fileP,'Products');
+    // Step 2 — read services
+    setProgress(45,'Reading Services file…','Parsing Excel data…',1);
+    const sResult = await readXlsx(fileS,'Services');
+
+    setProgress(62,'Processing data…','Normalising statuses and computing metrics…',2);
+    await new Promise(r=>setTimeout(r,180));
+
+    pRawRows = pResult.rawRows;
+    sRawRows = sResult.rawRows;
+    ALL_DEALS = [...pResult.deals,...sResult.deals];
+
+    setProgress(78,'Building charts…','Preparing visuals and filters…',2);
+    await new Promise(r=>setTimeout(r,180));
+
+    // Header info
+    const now=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('hDate').textContent='Report Date: '+now;
+    document.getElementById('hFiles').innerHTML=fileP.name+'<br>'+fileS.name;
+    populateFilters();
+
+    setProgress(95,'Almost ready…','Rendering dashboard…',3);
+    await new Promise(r=>setTimeout(r,200));
+
+    // Switch to dashboard
+    setProgress(100,'Done!','Your dashboard is ready.',3);
+    await new Promise(r=>setTimeout(r,300));
+    document.getElementById('uploadScreen').style.display='none';
+    document.getElementById('dashScreen').style.display='block';
+    render();
+
+  }catch(err){
+    // Show error in progress area
+    document.getElementById('progressWrap').style.display='none';
+    document.getElementById('genBtn').style.display='block';
+    document.getElementById('genBtn').textContent='⚠ Error — Try Again';
+    alert('Error reading files:\n'+err.message+'\n\nMake sure both files are valid Zoho CRM Excel exports.');
+  }
+}
+// ═══════════════════════════════════════════════════════════════════
+//  DOWNLOAD COMBINED EXCEL
+// ═══════════════════════════════════════════════════════════════════
+function downloadCombined(){
+  if(!pRawRows.length||!sRawRows.length){
+    alert('No data loaded. Please upload both files first.');
+    return;
+  }
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1 — Products Pipeline (original columns as-is)
+  const wsP=XLSX.utils.json_to_sheet(pRawRows);
+  XLSX.utils.book_append_sheet(wb,wsP,'Products Pipeline');
+
+  // Sheet 2 — Services Pipeline (original columns as-is)
+  const wsS=XLSX.utils.json_to_sheet(sRawRows);
+  XLSX.utils.book_append_sheet(wb,wsS,'Services Pipeline');
+
+  // Sheet 3 — Combined (both pipelines, Source Pipeline column prepended)
+  const combined=[
+    ...pRawRows.map(r=>({'Source Pipeline':'01 - PRODUCTS',...r})),
+    ...sRawRows.map(r=>({'Source Pipeline':'02 - CONSULTING',...r}))
+  ];
+  const wsC=XLSX.utils.json_to_sheet(combined);
+  XLSX.utils.book_append_sheet(wb,wsC,'Combined');
+
+  // Style header row bold for all sheets (SheetJS cell formatting)
+  [wsP,wsS,wsC].forEach(ws=>{
+    const range=XLSX.utils.decode_range(ws['!ref']||'A1');
+    for(let col=range.s.c;col<=range.e.c;col++){
+      const cell=ws[XLSX.utils.encode_cell({r:0,c:col})];
+      if(cell) cell.s={font:{bold:true}};
+    }
+  });
+
+  const date=new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb,`VCreaTek_Pipeline_Combined_${date}.xlsx`);
+}
+
+function reloadFiles(){
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});
+  charts={};
+  ['fStg','fReg','fOwn'].forEach(id=>{
+    const s=document.getElementById(id);
+    while(s.options.length>1)s.remove(1);
+  });
+  ['P','S'].forEach(t=>{
+    document.getElementById('zone'+t).classList.remove('loaded');
+    document.getElementById('fname'+t).textContent='No file selected';
+    document.getElementById('badge'+t).textContent='Waiting';
+  });
+  fileP=null;fileS=null;currentToggle='all';
+  pRawRows=[];sRawRows=[];
+  document.getElementById('genBtn').disabled=true;
+  document.getElementById('dashScreen').style.display='none';
+  document.getElementById('uploadScreen').style.display='flex';
+  // reset progress bar
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('progFill').style.width='0%';
+  document.getElementById('genBtn').style.display='block';
+  document.getElementById('genBtn').textContent='Generate Dashboard →';
+  document.getElementById('genBtn').disabled=true;
+  for(let i=0;i<4;i++){
+    document.getElementById('ps'+i).classList.remove('active','done');
+    document.getElementById('pl'+i).classList.remove('done');
+  }
+  // reset toggles
+  document.querySelectorAll('.ptog').forEach(b=>b.classList.remove('active','prod','svc'));
+  document.getElementById('tog-all').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  FILTERS & TOGGLE
+// ═══════════════════════════════════════════════════════════════════
+function populateFilters(){
+  const add=(id,vals)=>{
+    const s=document.getElementById(id);
+    while(s.options.length>1)s.remove(1); // clear any pre-baked options first (snapshot re-run safe)
+    [...new Set(vals)].filter(Boolean).sort().forEach(v=>{
+      const o=document.createElement('option');o.value=v;o.text=v;s.appendChild(o);
+    });
+  };
+  add('fStg',ALL_DEALS.map(d=>d.stage));
+  add('fReg',ALL_DEALS.map(d=>d.region));
+  add('fOwn',ALL_DEALS.map(d=>d.owner));
+}
+
+function setToggle(t){
+  currentToggle=t;
+  document.querySelectorAll('.ptog').forEach(b=>b.classList.remove('active','prod','svc'));
+  const btn=document.getElementById('tog-'+t);
+  btn.classList.add('active');
+  if(t==='prod')btn.classList.add('prod');
+  if(t==='svc')btn.classList.add('svc');
+  // Update offering blocks visibility
+  document.getElementById('dsBlock').style.display=(t==='prod')?'none':'block';
+  document.getElementById('scyBlock').style.display=(t==='svc')?'none':'block';
+  // Hide Offering Mix chart when viewing a single pipeline (no split to show)
+  const showOffering=(t==='all');
+  document.getElementById('typePanelWrap').style.display=showOffering?'':'none';
+  document.getElementById('overviewGrid3').className=showOffering?'grid3':'grid2';
+  // Update tagline & badge
+  const taglines={all:'Combined View · Products + Services',prod:'Products Pipeline — SCY Platform',svc:'Services Pipeline — Consulting / Data Services'};
+  const badges={all:'COMBINED',prod:'PRODUCTS',svc:'SERVICES'};
+  document.getElementById('hTagline').textContent=taglines[t];
+  document.getElementById('overviewBadge').textContent=badges[t];
+  render();
+}
+
+function getFiltered(){
+  const stg=document.getElementById('fStg').value;
+  const reg=document.getElementById('fReg').value;
+  const own=document.getElementById('fOwn').value;
+  const sts=document.getElementById('fSts').value;
+  return ALL_DEALS.filter(d=>{
+    if(currentToggle==='prod'&&d.src!=='Products')return false;
+    if(currentToggle==='svc'&&d.src!=='Services')return false;
+    if(stg&&d.stage!==stg)return false;
+    if(reg&&d.region!==reg)return false;
+    if(own&&d.owner!==own)return false;
+    if(sts&&d.status!==sts)return false;
+    return true;
+  });
+}
+
+function applyF(){render();}
+function resetF(){
+  ['fStg','fReg','fOwn','fSts'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tsearch').value='';
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CHART HELPERS
+// ═══════════════════════════════════════════════════════════════════
+Chart.register(ChartDataLabels);
+Chart.defaults.font.family="'Rubik',sans-serif";
+Chart.defaults.font.size=11.5;
+Chart.defaults.color='#6d6784';
+
+function destroyAll(){Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});charts={};}
+
+function uniq(arr){return[...new Set(arr.filter(Boolean))];}
+
+function donutChart(id,labels,values,colors,showLegend=true){
+  const el=document.getElementById(id);if(!el)return;
+  if(charts[id])try{charts[id].destroy();}catch{}
+  const total=values.reduce((a,b)=>a+b,0);
+  charts[id]=new Chart(el,{
+    type:'doughnut',
+    data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:2,borderColor:'#fff',hoverOffset:6}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'54%',
+      plugins:{
+        legend:{display:showLegend,position:'bottom',labels:{boxWidth:9,padding:8,font:{size:10,family:'Rubik'}}},
+        tooltip:{backgroundColor:'#241f3d',padding:8,callbacks:{label:ctx=>`  ${ctx.label}: ${ctx.raw} (${total?((ctx.raw/total)*100).toFixed(0):'0'}%)`}},
+        datalabels:{
+          display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,
+          color:'#fff',font:{size:11,weight:'700',family:'Rubik'},
+          formatter:(val)=>val>0?val:'',
+          textShadowBlur:3,textShadowColor:'rgba(0,0,0,.4)',
+        }
+      }
+    }
+  });
+}
+
+function barChart(id,labels,values,color,horizontal=false){
+  const el=document.getElementById(id);if(!el)return;
+  if(charts[id])try{charts[id].destroy();}catch{}
+  const isArr=Array.isArray(color);
+  charts[id]=new Chart(el,{
+    type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:isArr?color:color,borderRadius:5,maxBarThickness:28,borderSkipped:false}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      indexAxis:horizontal?'y':'x',
+      layout:{padding:{right:horizontal?36:12,top:horizontal?4:20}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#241f3d',padding:8},
+        datalabels:{
+          anchor:'end',align:'end',
+          color:'#241f3d',font:{size:11,weight:'700',family:'Rubik'},
+          formatter:val=>val>0?val:null,
+          clamp:true,
+        }
+      },
+      scales:{
+        x:{beginAtZero:true,grid:{color:horizontal?'#efeaf9':'transparent'},ticks:{precision:0,font:{size:10.5}}},
+        y:{beginAtZero:true,grid:{color:horizontal?'transparent':'#efeaf9'},ticks:{precision:0,font:{size:10.5}}}
+      }
+    }
+  });
+}
+
+function lineChart(id,labels,values){
+  const el=document.getElementById(id);if(!el)return;
+  if(charts[id])try{charts[id].destroy();}catch{}
+  charts[id]=new Chart(el,{
+    type:'line',
+    data:{labels,datasets:[{data:values,borderColor:'#f58232',backgroundColor:'rgba(245,130,50,.12)',fill:true,tension:.35,pointBackgroundColor:'#3a2d7d',pointRadius:5,pointHoverRadius:7,borderWidth:3}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#241f3d',padding:8},
+        datalabels:{
+          anchor:'top',align:'top',offset:4,
+          color:'#241f3d',font:{size:11,weight:'700',family:'Rubik'},
+          formatter:val=>val>0?val:null
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grace:'25%',ticks:{precision:0,font:{size:10.5}},grid:{color:'#efeaf9'}},
+        x:{grid:{display:false},ticks:{font:{size:10.5}}}
+      }
+    }
+  });
+}
+
+function groupedBarChart(id,labels,datasets){
+  const el=document.getElementById(id);if(!el)return;
+  if(charts[id])try{charts[id].destroy();}catch{}
+  charts[id]=new Chart(el,{
+    type:'bar',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:22}},
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{boxWidth:9,padding:8,font:{size:10.5,family:'Rubik'}}},
+        tooltip:{backgroundColor:'#241f3d',padding:8},
+        datalabels:{
+          anchor:'end',align:'top',offset:2,
+          color:'#241f3d',font:{size:11,weight:'700',family:'Rubik'},
+          formatter:val=>val>0?val:null
+        }
+      },
+      scales:{
+        y:{beginAtZero:true,grace:'20%',ticks:{precision:0,font:{size:10.5}},grid:{color:'#efeaf9'}},
+        x:{grid:{display:false},ticks:{font:{size:10.5}}}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════════
+function render(){
+  const data=getFiltered();
+  destroyAll();
+
+  const open =data.filter(d=>d.status==='Active');
+  const won  =data.filter(d=>d.status==='Closed Won');
+  const lost =data.filter(d=>d.status==='Closed Lost');
+  const oh   =data.filter(d=>d.status==='On Hold');
+  const newOp=data.filter(d=>d.isNew&&d.status==='Active');
+  const wr   =(won.length+lost.length)>0?((won.length/(won.length+lost.length))*100).toFixed(0)+'%':'—';
+
+  document.getElementById('fcnt').textContent=data.length+' deals shown';
+
+  // ── KPIs (no dollar values) ───────────────────────────────────────
+  const kpis=[
+    {label:'Total Deals',       value:data.length,   sub:`${open.length} open · ${won.length} won · ${lost.length} lost`, accent:'var(--blue)'},
+    {label:'Active / Open',     value:open.length,   sub:`${((open.length/(data.length||1))*100).toFixed(0)}% of visible pipeline`, accent:'var(--mint)'},
+    {label:'Win Rate',          value:wr,            sub:`${won.length} won of ${won.length+lost.length} decided`, accent:'var(--ice)'},
+    {label:'On Hold / At Risk', value:oh.length,     sub:`Stalled — needs a decision`, accent:'var(--orange)'},
+    {label:'New (Last 30 Days)',value:newOp.length,  sub:`Opportunities created recently`, accent:'var(--purple)'},
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi" style="--accent:${k.accent}">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="sub">${k.sub}</div>
+    </div>`).join('');
+
+  // ── Stage funnel (horizontal bar) ─────────────────────────────────
+  const stgData=STAGES.filter(s=>data.some(d=>d.stage===s));
+  barChart('stageChart',stgData,stgData.map(s=>data.filter(d=>d.stage===s).length),
+    stgData.map(s=>STAGE_COLORS[s]||'#3a2d7d'),true);
+
+  // ── Outcome donut ─────────────────────────────────────────────────
+  donutChart('outcomeChart',['Open','Closed Won','Closed Lost'],
+    [open.length,won.length,lost.length],['#3a2d7d','#86c883','#be2139']);
+
+  // ── Region donut ──────────────────────────────────────────────────
+  const regs=uniq(data.map(d=>d.region));
+  donutChart('regionChart',regs,regs.map(r=>data.filter(d=>d.region===r).length),PALETTE);
+
+  // ── Offering mix donut ────────────────────────────────────────────
+  const types=uniq(data.map(d=>d.type));
+  donutChart('typeChart',types,types.map(t=>data.filter(d=>d.type===t).length),
+    ['#f58232','#633a96','#7ed3f0','#86c883']);
+
+  // ── Lead source bar ───────────────────────────────────────────────
+  const srcMap={};data.forEach(d=>{if(d.leadSrc)srcMap[d.leadSrc]=(srcMap[d.leadSrc]||0)+1;});
+  const srcEntries=Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  barChart('sourceChart',srcEntries.map(e=>e[0]),srcEntries.map(e=>e[1]),'#633a96',true);
+
+  // ── Monthly trend ─────────────────────────────────────────────────
+  const mMap={};
+  data.forEach(d=>{if(d.month)mMap[d.month]=(mMap[d.month]||{count:0,ts:0});
+    if(d.month&&!mMap[d.month].ts){
+      const p=d.month.split(' ');
+      const mo={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+      mMap[d.month].ts=new Date(p[1],mo[p[0]],1).getTime();
+    }
+    if(d.month)mMap[d.month].count++;
+  });
+  const mEntries=Object.entries(mMap).sort((a,b)=>a[1].ts-b[1].ts);
+  lineChart('trendChart',mEntries.map(e=>e[0]),mEntries.map(e=>e[1].count));
+
+  // ── Offering split mini-charts ────────────────────────────────────
+  renderOfferingSplit('Services','ds',data);
+  renderOfferingSplit('Products','scy',data);
+
+
+
+  // ── Tables ────────────────────────────────────────────────────────
+  renderOHTable(oh);
+  rTable();
+}
+
+function renderOfferingSplit(src,prefix,allData){
+  const d=allData.filter(x=>x.src===src);
+  if(!d.length)return;
+
+  // Status only — Region, Stage, and Region Type are covered in the main charts above
+  const stsList=['Active','On Hold','Closed Won','Closed Lost'];
+  const stsVals=stsList.map(s=>d.filter(x=>x.status===s).length);
+  donutChart(prefix+'StatusChart',stsList,stsVals,
+    stsList.map(s=>STATUS_COLORS[s]),true);
+}
+
+// ── On-Hold Table ──────────────────────────────────────────────────
+function renderOHTable(oh){
+  document.getElementById('ohBadge').textContent=oh.length+' ON HOLD';
+  const tb=document.getElementById('ohBody');
+  if(!oh.length){tb.innerHTML='<tr><td colspan="8" class="empty">✓ No deals currently on hold</td></tr>';return;}
+  tb.innerHTML=oh.map(d=>{
+    const ageHtml=d.age!==null&&d.age>30?`<span class="stale">${d.age}d</span>`:d.age!==null?d.age+'d':'—';
+    return`<tr>
+      <td><b>${d.name}</b><div class="sub-txt">${d.company}</div></td>
+      <td>${d.owner}</td>
+      <td><span class="${d.src==='Products'?'pill pill-p':'pill pill-s'}">${d.src}</span></td>
+      <td><span style="background:${(STAGE_COLORS[d.stage]||'#aaa')}18;color:${STAGE_COLORS[d.stage]||'#6d6784'};padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">${d.stage}</span></td>
+      <td>${d.region}</td>
+      <td><span class="pill ponhold">On Hold</span></td>
+      <td style="font-size:11.5px;color:var(--grey)">${d.adt||'—'}</td>
+      <td style="text-align:center">${ageHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Deal Explorer Table ────────────────────────────────────────────
+function pillCls(s){
+  return{Active:'pactive','On Hold':'ponhold','Closed Won':'pwon','Closed Lost':'plost',Closed:'pclosed'}[s]||'pclosed';
+}
+function srt(col){
+  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}rTable();
+}
+function rTable(){
+  const q=(document.getElementById('tsearch').value||'').toLowerCase();
+  const data=getFiltered().filter(d=>!q||
+    d.name.toLowerCase().includes(q)||
+    d.company.toLowerCase().includes(q)||
+    d.owner.toLowerCase().includes(q)
+  );
+  const sorted=[...data].sort((a,b)=>{
+    let av=a[sortCol],bv=b[sortCol];
+    return(typeof av==='number'?av-bv:String(av||'').localeCompare(String(bv||'')))*sortDir;
+  });
+  document.getElementById('tcnt').textContent=sorted.length+' deals';
+  const tb=document.getElementById('tbody');
+  if(!sorted.length){tb.innerHTML='<tr><td colspan="10" class="empty">No deals match the current filters</td></tr>';return;}
+  tb.innerHTML=sorted.map(d=>`<tr>
+    <td><b style="font-size:12.5px">${d.name}</b></td>
+    <td>${d.company}</td>
+    <td>${d.owner}</td>
+    <td><span class="pill ${pillCls(d.status)}">${d.status}</span></td>
+    <td><span class="pill ${d.src==='Products'?'pill-p':'pill-s'}">${d.type}</span></td>
+    <td><span style="background:${(STAGE_COLORS[d.stage]||'#aaa')}18;color:${STAGE_COLORS[d.stage]||'#6d6784'};padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600">${d.stage}</span></td>
+    <td>${d.region}</td>
+    <td style="text-align:center">${d.prob>0?d.prob+'%':'—'}</td>
+    <td style="font-size:11.5px;color:var(--grey)">${d.odt||'—'}</td>
+    <td style="font-size:11.5px;color:var(--grey)">${d.cdt||'—'}</td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  EXPORT / PDF SUMMARY
+// ═══════════════════════════════════════════════════════════════════
+function openExport(){
+  buildExportView();
+  document.getElementById('expPreview').classList.add('open');
+}
+function closeExport(){
+  document.getElementById('expPreview').classList.remove('open');
+}
+function printExport(){
+  // Hide the preview modal so only #exportView prints (prevents 2-page issue)
+  const preview = document.getElementById('expPreview');
+  const prevDisplay = preview.style.display;
+  preview.style.display = 'none';
+
+  // Copy content to print-only div
+  document.getElementById('exportView').innerHTML =
+    document.getElementById('expInner').innerHTML;
+  const tb = document.getElementById('exportView').querySelector('.exp-toolbar');
+  if(tb) tb.remove();
+
+  window.print();
+
+  // Restore modal after print dialog closes
+  setTimeout(()=>{ preview.style.display = prevDisplay; }, 500);
+}
+
+function buildExportView(){
+  const data = getFiltered();
+  const open  = data.filter(d=>d.status==='Active');
+  const won   = data.filter(d=>d.status==='Closed Won');
+  const lost  = data.filter(d=>d.status==='Closed Lost');
+  const oh    = data.filter(d=>d.status==='On Hold');
+  const newOp = data.filter(d=>d.isNew && d.status==='Active');
+  const decided = won.length + lost.length;
+  const wr    = decided>0 ? ((won.length/decided)*100).toFixed(0)+'%' : '—';
+  const now   = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const toggleLabels = {all:'All Pipelines — Products + Services',prod:'Products Pipeline — SCY Platform',svc:'Services Pipeline — Consulting / Data Services'};
+  const toggleLabel = toggleLabels[currentToggle];
+
+  // ── Stage bars ────────────────────────────────────────────────
+  const stgRows = STAGES.filter(s=>data.some(d=>d.stage===s)).map(s=>({
+    label:s, count:data.filter(d=>d.stage===s).length, color:STAGE_COLORS[s]||'#aaa'
+  }));
+  const maxStg = Math.max(...stgRows.map(s=>s.count),1);
+  const stageBarsHTML = stgRows.map(s=>`
+    <div class="exp-bar-row">
+      <span class="exp-bar-lbl">${s.label}</span>
+      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${Math.round((s.count/maxStg)*100)}%;background:${s.color}"></div></div>
+      <span class="exp-bar-num">${s.count}</span>
+    </div>`).join('');
+
+  // ── Outcome blocks ────────────────────────────────────────────
+  const outcomeHTML = [
+    {label:'Active',  val:open.length,  bg:'#3a2d7d'},
+    {label:'Won',     val:won.length,   bg:'#2f8b45'},
+    {label:'Lost',    val:lost.length,  bg:'#be2139'},
+    {label:'On Hold', val:oh.length,    bg:'#d97706'},
+  ].map(o=>`<div class="exp-cb" style="background:${o.bg}"><div class="ecv">${o.val}</div><div class="ecl">${o.label}</div></div>`).join('');
+
+  // ── Region rows ───────────────────────────────────────────────
+  const regMap={};
+  data.forEach(d=>{if(d.region)regMap[d.region]=(regMap[d.region]||0)+1;});
+  const regRows = Object.entries(regMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxReg = Math.max(...regRows.map(r=>r[1]),1);
+  const regionHTML = regRows.map((r,i)=>`
+    <div class="exp-bar-row">
+      <span class="exp-bar-lbl" style="width:90px">${r[0]}</span>
+      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${Math.round((r[1]/maxReg)*100)}%;background:${PALETTE[i%PALETTE.length]}"></div></div>
+      <span class="exp-bar-num">${r[1]}</span>
+    </div>`).join('');
+
+  // ── Lead source rows ──────────────────────────────────────────
+  const srcMap={};
+  data.forEach(d=>{if(d.leadSrc)srcMap[d.leadSrc]=(srcMap[d.leadSrc]||0)+1;});
+  const srcRows = Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxSrc = Math.max(...srcRows.map(r=>r[1]),1);
+  const leadHTML = srcRows.map((r,i)=>`
+    <div class="exp-bar-row">
+      <span class="exp-bar-lbl" style="width:90px">${r[0]||'Unknown'}</span>
+      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${Math.round((r[1]/maxSrc)*100)}%;background:${PALETTE[(i+4)%PALETTE.length]}"></div></div>
+      <span class="exp-bar-num">${r[1]}</span>
+    </div>`).join('');
+
+  // ── Offering mix ──────────────────────────────────────────────
+  const prodCnt = data.filter(d=>d.src==='Products').length;
+  const svcCnt  = data.filter(d=>d.src==='Services').length;
+  const offeringHTML = [
+    {label:'Products (SCY)',  val:prodCnt, bg:'#f58232'},
+    {label:'Services (Consulting)', val:svcCnt, bg:'#633a96'},
+  ].map(o=>`<div class="exp-stat-row"><span class="exp-stat-dot" style="background:${o.bg}"></span><span class="exp-stat-lbl">${o.label}</span><span class="exp-stat-val">${o.val} deals</span></div>`).join('');
+
+  // ── Monthly trend text summary ────────────────────────────────
+  const mMap={};
+  data.forEach(d=>{if(d.month){mMap[d.month]=mMap[d.month]||{count:0,ts:0};
+    if(!mMap[d.month].ts){const p=d.month.split(' ');const mo={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};mMap[d.month].ts=new Date(p[1],mo[p[0]],1).getTime();}
+    mMap[d.month].count++;}});
+  const mRows = Object.entries(mMap).sort((a,b)=>a[1].ts-b[1].ts);
+  const maxM = Math.max(...mRows.map(r=>r[1].count),1);
+  const trendHTML = mRows.map((r,i)=>`
+    <div class="exp-bar-row">
+      <span class="exp-bar-lbl" style="width:70px">${r[0]}</span>
+      <div class="exp-bar-track"><div class="exp-bar-fill" style="width:${Math.round((r[1].count/maxM)*100)}%;background:#f58232"></div></div>
+      <span class="exp-bar-num">${r[1].count}</span>
+    </div>`).join('');
+
+  // ── On-hold table ─────────────────────────────────────────────
+  const ohTableHTML = oh.length===0
+    ? '<p style="font-size:10px;color:#6d6784;text-align:center;padding:8px">✓ No deals currently on hold</p>'
+    : `<table class="exp-oh-table">
+        <thead><tr>
+          <th>Deal Name</th><th>Company</th><th>Owner</th><th>Pipeline</th>
+          <th>Stage</th><th>Region</th><th>Last Activity</th><th>Days Stale</th>
+        </tr></thead>
+        <tbody>
+          ${oh.slice(0,12).map(d=>`<tr>
+            <td style="font-weight:600;max-width:130px">${d.name}</td>
+            <td>${d.company||'—'}</td>
+            <td>${d.owner}</td>
+            <td><span class="exp-pill" style="background:${d.src==='Products'?'#e5f2fb':'#efeaf9'};color:${d.src==='Products'?'#1c7bb0':'#3a2d7d'}">${d.type}</span></td>
+            <td>${d.stage}</td>
+            <td>${d.region}</td>
+            <td>${d.adt||'—'}</td>
+            <td style="text-align:center;${d.age!==null&&d.age>30?'color:#d97706;font-weight:700':''}">${d.age!==null?d.age+'d':'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      ${oh.length>12?`<p style="font-size:9px;color:#6d6784;text-align:right;margin-top:4px">Showing 12 of ${oh.length} on-hold deals</p>`:''}`;
+
+  // ── Win rate bar ──────────────────────────────────────────────
+  const wrPct = decided>0 ? (won.length/decided)*100 : 0;
+
+  // ── Assemble full export HTML ─────────────────────────────────
+  const html = `
+  <div class="exp-toolbar">
+    <span>📄 Leadership Summary Preview — click Print to save as PDF</span>
+    <div class="exp-toolbar-btns">
+      <button class="exp-print-btn" onclick="printExport()">🖨 Print / Save PDF</button>
+      <button class="exp-close-btn" onclick="closeExport()">✕ Close</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="exp-hdr">
+    <div>
+      <div class="exp-brand"><div class="exp-mark"></div><span class="exp-brand-txt">VCreaTek | FUEL DECISIONS · AMPLIFY IMPACT</span></div>
+      <div class="exp-title">Deal Pipeline Summary</div>
+      <div class="exp-sub">${toggleLabel}</div>
+    </div>
+    <div class="exp-asof">
+      <b>${now}</b>
+      <span style="font-size:9.5px;opacity:.7">${(fileP?fileP.name:'')}<br>${(fileS?fileS.name:'')}</span>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="exp-kpi-row">
+    <div class="exp-kpi-card" style="--ak:#3a2d7d"><div class="ek-lbl">Total Deals</div><div class="ek-val">${data.length}</div><div class="ek-sub">${open.length} open · ${won.length} won · ${lost.length} lost</div></div>
+    <div class="exp-kpi-card" style="--ak:#86c883"><div class="ek-lbl">Active / Open</div><div class="ek-val">${open.length}</div><div class="ek-sub">${data.length?((open.length/data.length)*100).toFixed(0):0}% of pipeline</div></div>
+    <div class="exp-kpi-card" style="--ak:#7ed3f0"><div class="ek-lbl">Win Rate</div><div class="ek-val">${wr}</div><div class="ek-sub">${won.length} won of ${decided} decided</div></div>
+    <div class="exp-kpi-card" style="--ak:#d97706"><div class="ek-lbl">On Hold</div><div class="ek-val">${oh.length}</div><div class="ek-sub">Stalled — needs decision</div></div>
+    <div class="exp-kpi-card" style="--ak:#633a96"><div class="ek-lbl">New (30d)</div><div class="ek-val">${newOp.length}</div><div class="ek-sub">Recent opportunities</div></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="exp-body">
+
+    <!-- Row 1: Stage + Outcome -->
+    <div class="exp-grid2">
+      <div class="exp-section">
+        <h4>Pipeline by Stage</h4>
+        ${stageBarsHTML||'<p style="font-size:10px;color:#6d6784">No data</p>'}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div class="exp-section" style="flex:1">
+          <h4>Outcome Mix</h4>
+          <div class="exp-cb-row">${outcomeHTML}</div>
+          ${decided>0?`<div style="margin-top:8px">
+            <div style="font-size:8.5px;color:#6d6784;margin-bottom:3px">Win rate vs closed deals</div>
+            <div style="background:#f0edf7;border-radius:4px;height:10px;overflow:hidden">
+              <div style="width:${wrPct.toFixed(0)}%;background:#2f8b45;height:100%;border-radius:4px"></div>
+            </div>
+            <div style="font-size:8.5px;color:#241f3d;font-weight:700;margin-top:2px">${wr}</div>
+          </div>`:''}
+        </div>
+        <div class="exp-section" style="flex:1">
+          <h4>Offering Mix</h4>
+          ${offeringHTML}
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Region + Lead Source + Trend -->
+    <div class="exp-grid3">
+      <div class="exp-section">
+        <h4>Region Distribution</h4>
+        ${regionHTML||'<p style="font-size:10px;color:#6d6784">No data</p>'}
+      </div>
+      <div class="exp-section">
+        <h4>Lead Source</h4>
+        ${leadHTML||'<p style="font-size:10px;color:#6d6784">No data</p>'}
+      </div>
+      <div class="exp-section">
+        <h4>Monthly Trend</h4>
+        ${trendHTML||'<p style="font-size:10px;color:#6d6784">No data</p>'}
+      </div>
+    </div>
+
+    <!-- On-hold table -->
+    <div class="exp-section" style="border-color:#f6d9bd;background:#fffcf9">
+      <h4 style="color:#8a5800">⚠ On-Hold Deals Requiring Attention (${oh.length})</h4>
+      ${ohTableHTML}
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="exp-footer">
+    <span>Generated by VCreaTek Deal Pipeline Report · ${now}</span>
+    <span>VCreaTek Consulting Services Pvt. Ltd. | www.vcreatek.com | Confidential</span>
+  </div>`;
+
+  document.getElementById('expInner').innerHTML = html;
+}
+// ═══════════════════════════════════════════════════════════════════
+//  SHARE REPORT — SNAPSHOT GENERATOR
+// ═══════════════════════════════════════════════════════════════════
+function openShareGuide(){
+  if(!ALL_DEALS.length){
+    alert('No data loaded yet. Please upload both Excel files first.');
+    return;
+  }
+  document.getElementById('shareModal').classList.add('open');
+}
+function closeShareGuide(){
+  document.getElementById('shareModal').classList.remove('open');
+}
+
+function saveSnapshot(){
+  closeShareGuide();
+  var dateLabel=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  var pName=fileP?fileP.name:'';
+  var sName=fileS?fileS.name:'';
+
+  // Safe JSON — prevents script-closing tags in any CRM field from breaking snapshot HTML
+  function safeJson(obj){
+    return JSON.stringify(obj)
+      .replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+  }
+
+  // Build boot code as a string — use <scr+ipt> to avoid HTML parser closing outer tag
+  var OT='<'+'script>'; // open tag
+  var CT='<'+ '/script>'; // close tag
+  var bootCode=[
+    'var SD='+safeJson(ALL_DEALS)+';',
+    'var SP='+safeJson(pRawRows)+';',
+    'var SS='+safeJson(sRawRows)+';',
+    "document.addEventListener('DOMContentLoaded',function(){",
+    'ALL_DEALS=SD;pRawRows=SP;sRawRows=SS;',
+    "document.getElementById('uploadScreen').style.display='none';",
+    "document.getElementById('spinner').style.display='none';",
+    "document.getElementById('dashScreen').style.display='block';",
+    "var hd=document.getElementById('hDate');",
+    "var hf=document.getElementById('hFiles');",
+    "if(hd)hd.textContent='Data as of "+dateLabel+"';",
+    "if(hf)hf.innerHTML='"+pName+"<br>"+sName+"';",
+    // Grey out Load New Files
+    "document.querySelectorAll('.reload-btn').forEach(function(b){",
+    "b.textContent='\uD83D\uDD12 View Only';b.disabled=true;",
+    "b.style.opacity='.4';b.style.cursor='not-allowed';b.onclick=null;});",
+    // Grey out Share button
+    "document.querySelectorAll('.share-btn').forEach(function(b){",
+    "b.textContent='\uD83D\uDCF8 Snapshot';b.disabled=true;",
+    "b.style.opacity='.4';b.style.cursor='not-allowed';b.onclick=null;});",
+    // Snapshot ribbon
+    "var rib=document.createElement('div');",
+    "rib.style.cssText='background:#241d52;color:#cfc7ec;text-align:center;padding:7px 20px;font-size:11.5px;font-family:Rubik,sans-serif;border-bottom:2px solid #f58232;';",
+    "rib.innerHTML='\uD83D\uDCF8 &nbsp;<b style=\"color:#fff\">Shared Snapshot</b>&nbsp;&nbsp;\u00b7&nbsp;&nbsp;Data as of <b style=\"color:#fff\">"+dateLabel+"</b>&nbsp;&nbsp;\u00b7&nbsp;&nbsp;All filters and charts are fully interactive';",
+    "var ds=document.getElementById('dashScreen');",
+    "if(ds)ds.parentNode.insertBefore(rib,ds);",
+    "['fStg','fReg','fOwn','fSts'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});",
+    "var ts=document.getElementById('tsearch');if(ts)ts.value='';",
+    'populateFilters();render();',
+    '});'
+  ].join('\n');
+
+  var boot='\n'+OT+'(function(){\n'+bootCode+'\n})();\n'+CT+'\n';
+
+  var html=document.documentElement.outerHTML;
+  html=html.replace(/<\/body>/i,boot+'
+<script>(function(){
+var SD=[{"name":"HUF Group | SCY Platform-Supply Chain Planning, Production Scheduling","company":"Huf","owner":"Anup Mudugal","stage":"Closed Lost","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Closed Lost","prob":10,"odt":"09 Mar 2026","cdt":"","adt":"04 Jun 2026","age":48,"month":"Mar 2026","isNew":false},{"name":"CIPLA | SCY Platform- Distribution Optimisation","company":"cipla","owner":"Anup Mudugal","stage":"Initial Contact Established","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"On Hold","prob":10,"odt":"10 Mar 2026","cdt":"","adt":"22 Apr 2026","age":91,"month":"Mar 2026","isNew":false},{"name":"BOSCH | SCY Platform-Demand Sensing","company":"Bosch","owner":"Anup Mudugal","stage":"Closed Lost","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Closed Lost","prob":10,"odt":"10 Mar 2026","cdt":"","adt":"04 Jun 2026","age":48,"month":"Mar 2026","isNew":false},{"name":"Megawecare | VCreatek Overall Offering","company":"Megawecare","owner":"Anup Mudugal","stage":"Initial Contact Established","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"On Hold","prob":10,"odt":"10 Mar 2026","cdt":"","adt":"02 Apr 2026","age":111,"month":"Mar 2026","isNew":false},{"name":"EY - Licence Resell - Gurobi","company":"EY","owner":"Manoo Haryal","stage":"Closed Won","region":"APAC","regionType":"Non GCC","leadSrc":"Other","src":"Products","type":"SCY Platform","status":"Closed Won","prob":100,"odt":"12 Feb 2026","cdt":"31 Mar 2026","adt":"20 Jul 2026","age":2,"month":"Feb 2026","isNew":false},{"name":"Alkem Labs | SCY Platform - Master Planning","company":"Alkem Laboratories Ltd","owner":"Manoo Haryal","stage":"Initial Contact Established","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"On Hold","prob":10,"odt":"06 Jan 2026","cdt":"","adt":"02 Apr 2026","age":111,"month":"Jan 2026","isNew":false},{"name":"Stryker | SCY Platform Demand Planning \u0026 Supply Chain Planning (Master Planning)","company":"Stryker","owner":"Manoo Haryal","stage":"Negotiation","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":40,"odt":"12 Feb 2026","cdt":"31 Mar 2026","adt":"13 Apr 2026","age":100,"month":"Feb 2026","isNew":false},{"name":"Everlife | SCY Platform - Demand Planning, Master planning and Power BI Dashboard","company":"Everlife","owner":"Manoo Haryal","stage":"Proposal Submitted","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"05 Feb 2026","cdt":"30 Apr 2026","adt":"04 Jun 2026","age":48,"month":"Feb 2026","isNew":false},{"name":"Nilkamal -SCY - Supply Chain Planning (Master Planning)","company":"Nilkamal","owner":"Manoo Haryal","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Website","src":"Products","type":"SCY Platform","status":"On Hold","prob":10,"odt":"15 Jan 2026","cdt":"30 Apr 2026","adt":"13 Apr 2026","age":100,"month":"Jan 2026","isNew":false},{"name":"HP | VCreaTek Overall Offering","company":"HP","owner":"Anup Mudugal","stage":"Closed Lost","region":"APAC","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Closed Lost","prob":10,"odt":"11 Mar 2026","cdt":"","adt":"04 Jun 2026","age":48,"month":"Mar 2026","isNew":false},{"name":"Autoneum | SCY Platform - Production Planning \u0026 Production Scheduling","company":"Autoneum","owner":"Anup Mudugal","stage":"Closed Lost","region":"Europe","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Closed Lost","prob":0,"odt":"11 Mar 2026","cdt":"","adt":"20 Jul 2026","age":2,"month":"Mar 2026","isNew":false},{"name":"GMG Group | VCreatek Overall Offering","company":"GMG group","owner":"Anup Mudugal","stage":"Initial Contact Established","region":"MENA","regionType":"GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"16 Mar 2026","cdt":"","adt":"22 Apr 2026","age":91,"month":"Mar 2026","isNew":false},{"name":"Philips","company":"Philips","owner":"Anup Mudugal","stage":"Proposal Submitted","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"25 Dec 2025","cdt":"","adt":"20 Jul 2026","age":2,"month":"Dec 2025","isNew":false},{"name":"Philips Forecasting","company":"Philips","owner":"Anup Mudugal","stage":"Proposal Submitted","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"31 Mar 2026","cdt":"","adt":"04 Jun 2026","age":48,"month":"Mar 2026","isNew":false},{"name":"Reise Mitas Tires | SCY Platform","company":"Reise Mitas Tires LLP","owner":"Manoo Haryal","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":10,"odt":"01 Apr 2026","cdt":"02 Apr 2026","adt":"16 Jul 2026","age":6,"month":"Apr 2026","isNew":false},{"name":"BKT Tyres","company":"BKT Tires","owner":"Edwin Samuel","stage":"Proposal Submitted","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":70,"odt":"01 Aug 2025","cdt":"31 Mar 2026","adt":"16 Jul 2026","age":6,"month":"Aug 2025","isNew":false},{"name":"Asian Paints | SCY Platform","company":"Asian Paints","owner":"Manoo Haryal","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":10,"odt":"07 Apr 2026","cdt":"01 Sept 2026","adt":"16 Jul 2026","age":6,"month":"Apr 2026","isNew":false},{"name":"Ace Designers-SCY","company":"Ace Designers Ltd","owner":"Edwin Samuel","stage":"Qualified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":55,"odt":"07 Apr 2026","cdt":"31 Aug 2026","adt":"20 Jul 2026","age":2,"month":"Apr 2026","isNew":false},{"name":"Indian Navy Indian Railways Gurobi Optimization","company":"Indian Navy","owner":"Manoo Haryal","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Alliance Partner","src":"Products","type":"SCY Platform","status":"Active","prob":10,"odt":"21 Apr 2026","cdt":"31 Aug 2026","adt":"16 Jul 2026","age":6,"month":"Apr 2026","isNew":false},{"name":"Intas Pharmaceuticals :SCY Platform","company":"Intas Pharmaceuticals","owner":"Manoo Haryal","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"On Hold","prob":10,"odt":"21 Apr 2026","cdt":"31 Jul 2026","adt":"17 Jul 2026","age":5,"month":"Apr 2026","isNew":false},{"name":"Fly Cloud Tech","company":"Fly Cloud Tech","owner":"Manoo Haryal","stage":"Initial Contact Established","region":"North America","regionType":"USA","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":10,"odt":"21 Apr 2026","cdt":"31 Jul 2026","adt":"02 Jul 2026","age":20,"month":"Apr 2026","isNew":false},{"name":"Airworks","company":"Air Works India","owner":"Amey Oak","stage":"Discovery In Progress","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":10,"odt":"03 Jul 2026","cdt":"30 Nov 2026","adt":"17 Jul 2026","age":5,"month":"Jul 2026","isNew":true},{"name":"TPac Packaging India Pvt Ltd","company":"Tpac Packaging India Pvt Ltd","owner":"Amey Oak","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":15,"odt":"16 Jul 2026","cdt":"","adt":"20 Jul 2026","age":2,"month":"Jul 2026","isNew":true},{"name":"o9 Soltuions","company":"o9 Solutions","owner":"Amey Oak","stage":"Proposal Submitted","region":"India","regionType":"Non GCC","leadSrc":"Partner","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"16 Jul 2026","cdt":"","adt":"20 Jul 2026","age":2,"month":"Jul 2026","isNew":true},{"name":"Parksons packaging","company":"Parksons Packaging","owner":"Amey Oak","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"16 Jul 2026","cdt":"","adt":"20 Jul 2026","age":2,"month":"Jul 2026","isNew":true},{"name":"Bangalore Airport Services Ltd","company":"Bangalore Airport Services Ltd","owner":"Amey Oak","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Products","type":"SCY Platform","status":"Active","prob":0,"odt":"16 Jul 2026","cdt":"","adt":"20 Jul 2026","age":2,"month":"Jul 2026","isNew":true},{"name":"TEVA PHARMA - Data Technology","company":"Teva Pharmaceuticals,NJ","owner":"Manoo Haryal","stage":"Closed Won","region":"North America","regionType":"USA","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Closed Won","prob":0,"odt":"10 Mar 2026","cdt":"29 May 2026","adt":"01 Jun 2026","age":51,"month":"Mar 2026","isNew":false},{"name":"PepsiCo-Data Services-AgenticAI","company":"PepsiCo","owner":"Edwin Samuel","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Cold Outreach","src":"Services","type":"Data Services","status":"Active","prob":10,"odt":"10 Mar 2026","cdt":"31 Jul 2026","adt":"26 Mar 2026","age":118,"month":"Mar 2026","isNew":false},{"name":"L\u0026T TECHNOLOGY SERVICES- Data Service- Data Strategy","company":"Larsen and Toubro shared seevices","owner":"Edwin Samuel","stage":"Proposal Submitted","region":"India","regionType":"Non GCC","leadSrc":"Other","src":"Services","type":"Data Services","status":"Active","prob":55,"odt":"26 Mar 2026","cdt":"31 May 2026","adt":"","age":null,"month":"Mar 2026","isNew":false},{"name":"Cencora | Forecasting Engine and Comparison","company":"Cencora","owner":"Manoo Haryal","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":25,"odt":"31 Mar 2026","cdt":"15 May 2026","adt":"31 Mar 2026","age":113,"month":"Mar 2026","isNew":false},{"name":"DR Reddy Labs-Semantic Model","company":"Dr. Reddy Labs","owner":"Edwin Samuel","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":40,"odt":"01 Oct 2025","cdt":"30 Apr 2026","adt":"","age":null,"month":"Oct 2025","isNew":false},{"name":"Dr. Reddy Labs-SCY Platform","company":"Dr. Reddy Labs","owner":"Edwin Samuel","stage":"Opportunity Identified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":40,"odt":"01 Oct 2025","cdt":"31 Mar 2026","adt":"16 Apr 2026","age":97,"month":"Oct 2025","isNew":false},{"name":"Expleo-Services-GCC","company":"Expleo","owner":"Edwin Samuel","stage":"Proposal Submitted","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":95,"odt":"31 Oct 2025","cdt":"30 Jun 2026","adt":"13 Apr 2026","age":100,"month":"Oct 2025","isNew":false},{"name":"Magnum Ice Cream- Services-GCC","company":"Magnum Ice Cream","owner":"Mrinalini Vishnu Priya","stage":"Qualified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"On Hold","prob":25,"odt":"08 Jan 2026","cdt":"30 Jun 2026","adt":"02 Jun 2026","age":50,"month":"Jan 2026","isNew":false},{"name":"Northern Trust-Services-GCC","company":"Northern Trust .","owner":"Edwin Samuel","stage":"Discovery In Progress","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":25,"odt":"15 Jan 2026","cdt":"30 Jun 2026","adt":"27 Mar 2026","age":117,"month":"Jan 2026","isNew":false},{"name":"PI Industries-Data Vizualization-GCC","company":"PI Industries","owner":"Edwin Samuel","stage":"Qualified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":40,"odt":"14 Jan 2026","cdt":"31 May 2026","adt":"27 Mar 2026","age":117,"month":"Jan 2026","isNew":false},{"name":"Tata Communication-Domestic","company":"Tata Communication","owner":"Edwin Samuel","stage":"Discovery In Progress","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":40,"odt":"07 Jan 2026","cdt":"30 Jun 2026","adt":"27 Mar 2026","age":117,"month":"Jan 2026","isNew":false},{"name":"Welspun","company":"Welspun","owner":"Edwin Samuel","stage":"Closed Won","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Closed Won","prob":100,"odt":"15 Jan 2026","cdt":"31 Oct 2026","adt":"27 Mar 2026","age":117,"month":"Jan 2026","isNew":false},{"name":"Digital Realty-Data Vizualization","company":"Digital Realty","owner":"Edwin Samuel","stage":"Qualified","region":"North America","regionType":"USA","leadSrc":"Referral","src":"Services","type":"Data Services","status":"On Hold","prob":40,"odt":"05 Nov 2025","cdt":"31 Mar 2026","adt":"27 Mar 2026","age":117,"month":"Nov 2025","isNew":false},{"name":"Kenvue-DNA-67","company":"Kenvue","owner":"Edwin Samuel","stage":"Verbal Commitment","region":"India","regionType":"Non GCC","leadSrc":"Existing Client","src":"Services","type":"Data Services","status":"Active","prob":85,"odt":"19 Mar 2026","cdt":"14 May 2026","adt":"","age":null,"month":"Mar 2026","isNew":false},{"name":"Kenvue-DNA-BA-30","company":"Kenvue","owner":"Edwin Samuel","stage":"Verbal Commitment","region":"India","regionType":"Non GCC","leadSrc":"Existing Client","src":"Services","type":"Data Services","status":"Active","prob":85,"odt":"","cdt":"","adt":"","age":null,"month":"","isNew":false},{"name":"Kenvue-3 - K Cloud Migration - Roles_16","company":"Kenvue","owner":"Edwin Samuel","stage":"Closed Won","region":"India","regionType":"Non GCC","leadSrc":"Existing Client","src":"Services","type":"Data Services","status":"Closed Won","prob":85,"odt":"12 Mar 2026","cdt":"21 May 2026","adt":"","age":null,"month":"Mar 2026","isNew":false},{"name":"HUL-Agentic AI","company":"Hindustan Unilever","owner":"Edwin Samuel","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Cold Outreach","src":"Services","type":"Data Services","status":"Active","prob":55,"odt":"01 Apr 2026","cdt":"31 Jul 2026","adt":"20 Jul 2026","age":2,"month":"Apr 2026","isNew":false},{"name":"Cargill-PowerBI","company":"Cargill","owner":"Edwin Samuel","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":70,"odt":"06 Apr 2026","cdt":"31 Jul 2026","adt":"20 Jul 2026","age":2,"month":"Apr 2026","isNew":false},{"name":"Cargill-Data Migration","company":"Cargill","owner":"Edwin Samuel","stage":"Initial Contact Established","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":70,"odt":"06 Apr 2026","cdt":"31 Jul 2026","adt":"20 Jul 2026","age":2,"month":"Apr 2026","isNew":false},{"name":"Kenvue SG -SC consulting opportunity","company":"Kenvue SG","owner":"Anup Mudugal","stage":"Proposal Submitted","region":"APAC","regionType":"Non GCC","leadSrc":"Existing Client","src":"Services","type":"Data Services","status":"Active","prob":0,"odt":"","cdt":"","adt":"16 Jul 2026","age":6,"month":"","isNew":false},{"name":"Kenvue- PBI","company":"Kenvue","owner":"Edwin Samuel","stage":"Qualified","region":"India","regionType":"Non GCC","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":55,"odt":"","cdt":"","adt":"20 Jul 2026","age":2,"month":"","isNew":false},{"name":"J\u0026J BPO Set up at Bangalore","company":"Johnson \u0026 Johnson","owner":"Amey Oak","stage":"Opportunity Identified","region":"Global","regionType":"Unassigned","leadSrc":"Existing Client","src":"Services","type":"Data Services","status":"Active","prob":0,"odt":"02 Jul 2026","cdt":"","adt":"02 Jul 2026","age":20,"month":"Jul 2026","isNew":true},{"name":"J\u0026J MedTech SC Transformation Office","company":"Johnson \u0026 Johnson (MedTech)","owner":"Harsh Mestri","stage":"Initial Contact Established","region":"North America","regionType":"USA","leadSrc":"Referral","src":"Services","type":"Data Services","status":"Active","prob":25,"odt":"24 Jun 2026","cdt":"","adt":"","age":null,"month":"Jun 2026","isNew":true}];
+var SP=[{"Deal Id":"zcrm_1170978000000495335","Deal Owner":"Anup Mudugal","Deal Name":"HUF Group | SCY Platform-Supply Chain Planning, Production Scheduling","Deal Status":"Closed","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Huf","Contact Name":"Sandeep Chaudhary","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Closed Lost","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46090.22928240741,"Deal Probability %":0.1,"Closing Date":"","Created By":"Anup Mudugal","Modified By":"Anup Mudugal","Created Time":46090.52841435185,"Modified Time":46176.95805555556,"Last Activity Time":46176.95805555556,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"Decision makers are HQ in Germany. They do not want to see beyond SAP","SCY Platform Sub Offering":"Production Planning;Production Scheduling","Team Member":""},{"Deal Id":"zcrm_1170978000000495473","Deal Owner":"Anup Mudugal","Deal Name":"CIPLA | SCY Platform- Distribution Optimisation","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"cipla","Contact Name":"Devendra Bahatkar","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"ON HOLD","Region":"APAC","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46091.22928240741,"Deal Probability %":0.1,"Closing Date":"","Created By":"Anup Mudugal","Modified By":"Anup Mudugal","Created Time":46091.40341435185,"Modified Time":46134.67049768518,"Last Activity Time":46134.67049768518,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495526","Deal Owner":"Anup Mudugal","Deal Name":"BOSCH | SCY Platform-Demand Sensing","Deal Status":"Closed","Hold Reason (If ON HOLD)":"Awaiting Client Response","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Bosch","Contact Name":"Krishnan N","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Closed Lost","Tag":"ON HOLD","Region":"APAC","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46091.22928240741,"Deal Probability %":0.1,"Closing Date":"","Created By":"Anup Mudugal","Modified By":"Anup Mudugal","Created Time":46091.42049768518,"Modified Time":46176.95586805556,"Last Activity Time":46176.95586805556,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"Exploratory","Pain Point Summary":"NA","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495564","Deal Owner":"Anup Mudugal","Deal Name":"Megawecare | VCreatek Overall Offering","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"Awaiting Client Response","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Megawecare","Contact Name":"Sourabh Kumar Padhi","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"ON HOLD","Region":"APAC","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46091.22928240741,"Deal Probability %":0.1,"Closing Date":"","Created By":"Anup Mudugal","Modified By":"Manoo Haryal","Created Time":46091.426400462966,"Modified Time":46114.713113425925,"Last Activity Time":46114.713368055556,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"Exploratory","Pain Point Summary":"Client is not responding so on HOLD.","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495609","Deal Owner":"Manoo Haryal","Deal Name":"EY - Licence Resell - Gurobi","Deal Status":"Closed","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"EY","Contact Name":"Arpita Bhargava","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Closed Won","Tag":"","Region":"APAC","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46065.22928240741,"Deal Probability %":1,"Closing Date":46112.22928240741,"Created By":"Manoo Haryal","Modified By":"Amey Oak","Created Time":46091.42957175926,"Modified Time":46223.4483912037,"Last Activity Time":46223.4483912037,"Pipeline":"01-  PRODUCTS","Lead Source":"Other","Strategic Account":"true","GCC Account":"false","Product":"","Revenue Type":"Licence","Recurring Revenue?":"false","Buying Timeline":"\u003c3 months","Pain Point Summary":"Licence Selling","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495670","Deal Owner":"Manoo Haryal","Deal Name":"Alkem Labs | SCY Platform - Master Planning","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"Other","Hold Review Date (If ON HOLD)":46142.22928240741,"Co-Owner":"","Company Name":"Alkem Laboratories Ltd","Contact Name":"Raghavan Sethuraman","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"ON HOLD","Region":"APAC","Estimated Deal Value (USD)":"51K-100K","Opportunity Creation Date":46028.22928240741,"Deal Probability %":0.1,"Closing Date":"","Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46091.47222222222,"Modified Time":46114.564780092594,"Last Activity Time":46114.564780092594,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"Exploratory","Pain Point Summary":"Supply Chain Solution","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495696","Deal Owner":"Manoo Haryal","Deal Name":"Stryker | SCY Platform Demand Planning \u0026 Supply Chain Planning (Master Planning)","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Stryker","Contact Name":"Ankit Gupta","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Negotiation","Tag":"","Region":"APAC","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46065.22928240741,"Deal Probability %":0.4,"Closing Date":46112.22928240741,"Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46091.47607638889,"Modified Time":46125.601006944446,"Last Activity Time":46125.601006944446,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"\u003c3 months","Pain Point Summary":"Supply Chain Solution","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495717","Deal Owner":"Manoo Haryal","Deal Name":"Everlife | SCY Platform - Demand Planning, Master planning and Power BI Dashboard","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Everlife","Contact Name":"Srikant Vinakota","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Proposal Submitted","Tag":"","Region":"APAC","Estimated Deal Value (USD)":"51K-100K","Opportunity Creation Date":46058.22928240741,"Deal Probability %":"","Closing Date":46142.22928240741,"Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46091.47988425926,"Modified Time":46110.426041666666,"Last Activity Time":46177.38549768519,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495731","Deal Owner":"Manoo Haryal","Deal Name":"Nilkamal -SCY - Supply Chain Planning (Master Planning)","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"Geo- political","Hold Review Date (If ON HOLD)":46127.22928240741,"Co-Owner":"","Company Name":"Nilkamal","Contact Name":"Aditya Kanade","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Opportunity Identified","Tag":"ON HOLD","Region":"India","Estimated Deal Value (USD)":"51K-100K","Opportunity Creation Date":46037.22928240741,"Deal Probability %":0.1,"Closing Date":46142.22928240741,"Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46091.48458333333,"Modified Time":46107.454247685186,"Last Activity Time":46125.38475694445,"Pipeline":"01-  PRODUCTS","Lead Source":"Website","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"3â6 months","Pain Point Summary":"Looking for supply chain solutions","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495819","Deal Owner":"Anup Mudugal","Deal Name":"HP | VCreaTek Overall Offering","Deal Status":"Closed","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"HP","Contact Name":"Mohit Wadhawan","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Closed Lost","Tag":"ON HOLD","Region":"APAC","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46092.22928240741,"Deal Probability %":0.1,"Closing Date":"","Created By":"Anup Mudugal","Modified By":"Anup Mudugal","Created Time":46092.480092592596,"Modified Time":46176.955659722225,"Last Activity Time":46176.955659722225,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000495846","Deal Owner":"Anup Mudugal","Deal Name":"Autoneum | SCY Platform - Production Planning \u0026 Production Scheduling","Deal Status":"Closed","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Autoneum","Contact Name":"Swapnil Yalgi","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Closed Lost","Tag":"","Region":"Europe","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46092.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Anup Mudugal","Modified By":"Amey Oak","Created Time":46092.964479166665,"Modified Time":46223.44810185185,"Last Activity Time":46223.44810185185,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"Production Scheduling and Production planning","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000504014","Deal Owner":"Anup Mudugal","Deal Name":"GMG Group | VCreatek Overall Offering","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"GMG group","Contact Name":"Tanisha Govindrajan","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"","Region":"MENA","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46097.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Anup Mudugal","Modified By":"Manoo Haryal","Created Time":46097.94614583333,"Modified Time":46107.45123842593,"Last Activity Time":46134.66960648148,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000504049","Deal Owner":"Anup Mudugal","Deal Name":"Philips","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Philips","Contact Name":"Phaniraj Rajendra Prasad","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Proposal Submitted","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46016.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Anup Mudugal","Modified By":"Amey Oak","Created Time":46098.5459375,"Modified Time":46223.446851851855,"Last Activity Time":46223.446851851855,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"","Revenue Type":"Support","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000512161","Deal Owner":"Anup Mudugal","Deal Name":"Philips Forecasting","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Philips","Contact Name":"Phaniraj Rajendra Prasad","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Proposal Submitted","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46112.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Anup Mudugal","Modified By":"Anup Mudugal","Created Time":46112.97509259259,"Modified Time":46134.67177083333,"Last Activity Time":46177.3846875,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Support","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000513911","Deal Owner":"Manoo Haryal","Deal Name":"Reise Mitas Tires | SCY Platform","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"Anup Mudugal","Company Name":"Reise Mitas Tires LLP","Contact Name":"Ashok Bhukmaria","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46113.22928240741,"Deal Probability %":0.1,"Closing Date":46114.22928240741,"Created By":"Manoo Haryal","Modified By":"Amey Oak","Created Time":46114.562997685185,"Modified Time":46206.38497685185,"Last Activity Time":46219.617314814815,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"Production Planning and Scheduling.","SCY Platform Sub Offering":"Production Planning;Production Scheduling","Team Member":"Anup, Sesh"},{"Deal Id":"zcrm_1170978000000515114","Deal Owner":"Edwin Samuel","Deal Name":"BKT Tyres","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"BKT Tires","Contact Name":"Venu M","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Proposal Submitted","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":45870.22928240741,"Deal Probability %":0.7,"Closing Date":46112.22928240741,"Created By":"Edwin Samuel","Modified By":"Amey Oak","Created Time":46108.56883101852,"Modified Time":46219.61574074074,"Last Activity Time":46219.61587962963,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"New Business Planning.","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000525040","Deal Owner":"Manoo Haryal","Deal Name":"Asian Paints | SCY Platform","Deal Status":"Active","Hold Reason (If ON HOLD)":"Other","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Asian Paints","Contact Name":"Sandeep Srivastava","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46119.22928240741,"Deal Probability %":0.1,"Closing Date":46266.22928240741,"Created By":"Manoo Haryal","Modified By":"Amey Oak","Created Time":46119.57116898148,"Modified Time":46219.61461805556,"Last Activity Time":46219.61461805556,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"Exploratory","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000534016","Deal Owner":"Edwin Samuel","Deal Name":"Ace Designers-SCY","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"Amey Oak","Company Name":"Ace Designers Ltd","Contact Name":"Goutham C","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Qualified","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46119.22928240741,"Deal Probability %":0.55,"Closing Date":46265.22928240741,"Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46127.470925925925,"Modified Time":46223.62351851852,"Last Activity Time":46223.62351851852,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"3â6 months","Pain Point Summary":"1. Capacity Constraint\n2. Order fulfillment","SCY Platform Sub Offering":"SC Consulting;Production Planning","Team Member":"Navan, Anup,Mrunalini"},{"Deal Id":"zcrm_1170978000000539101","Deal Owner":"Manoo Haryal","Deal Name":"Indian Navy Indian Railways Gurobi Optimization","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Indian Navy","Contact Name":"Sandeep .","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46133.22928240741,"Deal Probability %":0.1,"Closing Date":46265.22928240741,"Created By":"Manoo Haryal","Modified By":"Amey Oak","Created Time":46133.448541666665,"Modified Time":46219.55877314815,"Last Activity Time":46219.55946759259,"Pipeline":"01-  PRODUCTS","Lead Source":"Alliance Partner","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Licence","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"Gurobi Optimization Solver license with 1 year support\n4 months of Optimization consultant service","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000539140","Deal Owner":"Manoo Haryal","Deal Name":"Intas Pharmaceuticals :SCY Platform","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Intas Pharmaceuticals","Contact Name":"Prasanna Aparanji","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"ON HOLD","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46133.22928240741,"Deal Probability %":0.1,"Closing Date":46234.22928240741,"Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46133.459641203706,"Modified Time":46220.711018518516,"Last Activity Time":46220.711018518516,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000539174","Deal Owner":"Manoo Haryal","Deal Name":"Fly Cloud Tech","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"Amey Oak","Company Name":"Fly Cloud Tech","Contact Name":"Bhavin Patadia","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Initial Contact Established","Tag":"","Region":"North America","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46133.22928240741,"Deal Probability %":0.1,"Closing Date":46234.22928240741,"Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46133.47039351852,"Modified Time":46205.40945601852,"Last Activity Time":46205.40945601852,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":"Amey"},{"Deal Id":"zcrm_1170978000000633061","Deal Owner":"Amey Oak","Deal Name":"Airworks","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"Seshadri Lakshminarayanan","Company Name":"Air Works India","Contact Name":"Krishnaswamy Krishnaswamy","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Discovery In Progress","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46206.22928240741,"Deal Probability %":0.1,"Closing Date":46356.22928240741,"Created By":"Amey Oak","Modified By":"Amey Oak","Created Time":46206.383356481485,"Modified Time":46220.44494212963,"Last Activity Time":46220.44494212963,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"6+ months","Pain Point Summary":"","SCY Platform Sub Offering":"SC Consulting","Team Member":"Anup"},{"Deal Id":"zcrm_1170978000000640049","Deal Owner":"Amey Oak","Deal Name":"TPac Packaging India Pvt Ltd","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"Anup Mudugal","Company Name":"Tpac Packaging India Pvt Ltd","Contact Name":"Rohit Deshmukh","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Opportunity Identified","Tag":"","Region":"India","Estimated Deal Value (USD)":"51K-100K","Opportunity Creation Date":46219.22928240741,"Deal Probability %":0.15,"Closing Date":"","Created By":"Amey Oak","Modified By":"Amey Oak","Created Time":46219.597083333334,"Modified Time":46223.44708333333,"Last Activity Time":46223.44708333333,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"Implementation","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000640058","Deal Owner":"Amey Oak","Deal Name":"o9 Soltuions","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"o9 Solutions","Contact Name":"Navneeth Chidambaram","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Proposal Submitted","Tag":"","Region":"India","Estimated Deal Value (USD)":"51K-100K","Opportunity Creation Date":46219.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Amey Oak","Modified By":"Amey Oak","Created Time":46219.60915509259,"Modified Time":46223.44730324074,"Last Activity Time":46223.44730324074,"Pipeline":"01-  PRODUCTS","Lead Source":"Partner","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000640067","Deal Owner":"Amey Oak","Deal Name":"Parksons packaging","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"","Company Name":"Parksons Packaging","Contact Name":"Test Test 2","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Opportunity Identified","Tag":"","Region":"India","Estimated Deal Value (USD)":"51K-100K","Opportunity Creation Date":46219.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Amey Oak","Modified By":"Amey Oak","Created Time":46219.61335648148,"Modified Time":46223.447488425925,"Last Activity Time":46223.447488425925,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"","Team Member":""},{"Deal Id":"zcrm_1170978000000640100","Deal Owner":"Amey Oak","Deal Name":"Bangalore Airport Services Ltd","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Co-Owner":"Anup Mudugal","Company Name":"Bangalore Airport Services Ltd","Contact Name":"Balaji Hariharan","Secondary Contact Email":"","Sub-Pipeline":"Sales Pipeline Standard","Stage":"Opportunity Identified","Tag":"","Region":"India","Estimated Deal Value (USD)":"Upto 50K","Opportunity Creation Date":46219.22928240741,"Deal Probability %":"","Closing Date":"","Created By":"Amey Oak","Modified By":"Amey Oak","Created Time":46219.62255787037,"Modified Time":46223.44767361111,"Last Activity Time":46223.44767361111,"Pipeline":"01-  PRODUCTS","Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Product":"SCY Platform","Revenue Type":"","Recurring Revenue?":"false","Buying Timeline":"","Pain Point Summary":"","SCY Platform Sub Offering":"Supply Chain Planning","Team Member":""}];
+var SS=[{"Deal Id":"zcrm_1170978000000495578","Company Name":"Teva Pharmaceuticals,NJ","Deal Name":"TEVA PHARMA - Data Technology","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Chandra Singh","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Closed Won","Deal Owner":"Manoo Haryal","Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46091.426469907405,"Modified Time":46174.64561342593,"Last Activity Time":46174.64561342593,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46091.22928240741,"Closing Date":46171.22928240741,"Region":"North America","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":"","Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"We have closed 3 resources demand for 1 year.","Consulting Offering":"Staff Augmentation","Service Type":"Consulting","Domain":"Data Services","Engagement Model":"Fixed Bid","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000512028","Company Name":"PepsiCo","Deal Name":"PepsiCo-Data Services-AgenticAI","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Suresh Manoharan","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Initial Contact Established","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"VCreaTek Consulting","Created Time":46106.77006944444,"Modified Time":46107.42304398148,"Last Activity Time":46107.42304398148,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46091.22928240741,"Closing Date":46234.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.1,"Lead Source":"Cold Outreach","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"false","Co-Owner":""},{"Deal Id":"zcrm_1170978000000512134","Company Name":"Larsen and Toubro shared seevices","Deal Name":"L\u0026T TECHNOLOGY SERVICES- Data Service- Data Strategy","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Peeyush Maharishi","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Proposal Submitted","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46107.47765046296,"Modified Time":46107.47765046296,"Last Activity Time":"","Pipeline":"02- CONSULTING","Opportunity Creation Date":46107.22928240741,"Closing Date":46173.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.55,"Lead Source":"Other","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"Data Services","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000513821","Company Name":"Cencora","Deal Name":"Cencora | Forecasting Engine and Comparison","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Opportunity Identified","Deal Owner":"Manoo Haryal","Created By":"Manoo Haryal","Modified By":"Manoo Haryal","Created Time":46112.62789351852,"Modified Time":46112.62789351852,"Last Activity Time":46112.6280787037,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46112.22928240741,"Closing Date":46157.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.25,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"Forecasting Engine and Comparison","Consulting Offering":"","Service Type":"Consulting","Domain":"Data Services","Engagement Model":"T\u0026M","Recurring Revenue?":"false","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515128","Company Name":"Dr. Reddy Labs","Deal Name":"DR Reddy Labs-Semantic Model","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"DG Phani","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Opportunity Identified","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.57497685185,"Modified Time":46108.57497685185,"Last Activity Time":"","Pipeline":"02- CONSULTING","Opportunity Creation Date":45931.22928240741,"Closing Date":46142.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.4,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515142","Company Name":"Dr. Reddy Labs","Deal Name":"Dr. Reddy Labs-SCY Platform","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"DG Phani","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Opportunity Identified","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Manoo Haryal","Created Time":46108.57732638889,"Modified Time":46128.40331018518,"Last Activity Time":46128.40331018518,"Pipeline":"02- CONSULTING","Opportunity Creation Date":45931.22928240741,"Closing Date":46112.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.4,"Lead Source":"Referral","Strategic Account":"false","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"false","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515163","Company Name":"Expleo","Deal Name":"Expleo-Services-GCC","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Saket Newaskar","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Proposal Submitted","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.57989583333,"Modified Time":46125.60637731481,"Last Activity Time":46125.60637731481,"Pipeline":"02- CONSULTING","Opportunity Creation Date":45961.22928240741,"Closing Date":46203.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.95,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"true","Description":"","Consulting Offering":"GCC Setup","Service Type":"Consulting","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515189","Company Name":"Magnum Ice Cream","Deal Name":"Magnum Ice Cream- Services-GCC","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"Other","Hold Review Date (If ON HOLD)":"","Contact Name":"Sitanshu Tiwari","Tag":"ON HOLD","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Qualified","Deal Owner":"Mrinalini Vishnu Priya","Created By":"Edwin Samuel","Modified By":"VCreaTek Consulting","Created Time":46108.58552083333,"Modified Time":46175.611655092594,"Last Activity Time":46175.611655092594,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46030.22928240741,"Closing Date":46203.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.25,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515208","Company Name":"Northern Trust .","Deal Name":"Northern Trust-Services-GCC","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Kamaljit Singh","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Discovery In Progress","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.58803240741,"Modified Time":46108.58803240741,"Last Activity Time":46108.58810185185,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46037.22928240741,"Closing Date":46203.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.25,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"Commercial Business Insights","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515227","Company Name":"PI Industries","Deal Name":"PI Industries-Data Vizualization-GCC","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Arvind Gupta","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Qualified","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.590578703705,"Modified Time":46108.590578703705,"Last Activity Time":46108.59091435185,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46036.22928240741,"Closing Date":46173.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.4,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515246","Company Name":"Tata Communication","Deal Name":"Tata Communication-Domestic","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Rahul D","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Discovery In Progress","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.59226851852,"Modified Time":46108.59226851852,"Last Activity Time":46108.592453703706,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46029.22928240741,"Closing Date":46203.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.4,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515265","Company Name":"Welspun","Deal Name":"Welspun","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Abhishek Verma","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Closed Won","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.5943287037,"Modified Time":46108.5943287037,"Last Activity Time":46108.59446759259,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46037.22928240741,"Closing Date":46326.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":1,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000515284","Company Name":"Digital Realty","Deal Name":"Digital Realty-Data Vizualization","Deal Status":"On Hold","Hold Reason (If ON HOLD)":"Other","Hold Review Date (If ON HOLD)":"","Contact Name":"Prashant Sadashiv","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Qualified","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46108.59605324074,"Modified Time":46108.59744212963,"Last Activity Time":46108.59763888889,"Pipeline":"02- CONSULTING","Opportunity Creation Date":45966.22928240741,"Closing Date":46112.22928240741,"Region":"North America","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.4,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000520010","Company Name":"Kenvue","Deal Name":"Kenvue-DNA-67","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Suresh Gopi","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Verbal Commitment","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46118.65016203704,"Modified Time":46118.65016203704,"Last Activity Time":"","Pipeline":"02- CONSULTING","Opportunity Creation Date":46100.22928240741,"Closing Date":46156.22928240741,"Region":"India","Estimated Deal Value (USD)":"501K- 1M","Deal Probability %":0.85,"Lead Source":"Existing Client","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000520024","Company Name":"Kenvue","Deal Name":"Kenvue-DNA-BA-30","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Suresh Gopi","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Verbal Commitment","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46118.65206018519,"Modified Time":46118.65206018519,"Last Activity Time":"","Pipeline":"02- CONSULTING","Opportunity Creation Date":"","Closing Date":"","Region":"India","Estimated Deal Value (USD)":"501K- 1M","Deal Probability %":0.85,"Lead Source":"Existing Client","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000520038","Company Name":"Kenvue","Deal Name":"Kenvue-3 - K Cloud Migration - Roles_16","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Closed Won","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46118.65865740741,"Modified Time":46118.65865740741,"Last Activity Time":"","Pipeline":"02- CONSULTING","Opportunity Creation Date":46093.22928240741,"Closing Date":46163.22928240741,"Region":"India","Estimated Deal Value (USD)":"501K- 1M","Deal Probability %":0.85,"Lead Source":"Existing Client","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000520061","Company Name":"Hindustan Unilever","Deal Name":"HUL-Agentic AI","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Arpita Pramanick","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Initial Contact Established","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Edwin Samuel","Created Time":46118.736863425926,"Modified Time":46128.24236111111,"Last Activity Time":46223.45290509259,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46113.22928240741,"Closing Date":46234.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.55,"Lead Source":"Cold Outreach","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000526065","Company Name":"Cargill","Deal Name":"Cargill-PowerBI","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Vishal Lakhmani","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Initial Contact Established","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Amey Oak","Created Time":46125.508784722224,"Modified Time":46223.44909722222,"Last Activity Time":46223.44909722222,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46118.22928240741,"Closing Date":46234.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.7,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000526079","Company Name":"Cargill","Deal Name":"Cargill-Data Migration","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Vishal Lakhmani","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Initial Contact Established","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Amey Oak","Created Time":46125.50943287037,"Modified Time":46223.44899305556,"Last Activity Time":46223.44899305556,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46118.22928240741,"Closing Date":46234.22928240741,"Region":"India","Estimated Deal Value (USD)":"Upto 50K","Deal Probability %":0.7,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000543188","Company Name":"Kenvue SG","Deal Name":"Kenvue SG -SC consulting opportunity","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Proposal Submitted","Deal Owner":"Anup Mudugal","Created By":"Anup Mudugal","Modified By":"Amey Oak","Created Time":46134.683900462966,"Modified Time":46219.6193287037,"Last Activity Time":46219.61951388889,"Pipeline":"02- CONSULTING","Opportunity Creation Date":"","Closing Date":"","Region":"APAC","Estimated Deal Value (USD)":"","Deal Probability %":"","Lead Source":"Existing Client","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"Supply Chain","Service Type":"Consulting","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000576002","Company Name":"Kenvue","Deal Name":"Kenvue- PBI","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Suresh Gopi","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Qualified","Deal Owner":"Edwin Samuel","Created By":"Edwin Samuel","Modified By":"Amey Oak","Created Time":46156.41237268518,"Modified Time":46223.44931712963,"Last Activity Time":46223.44931712963,"Pipeline":"02- CONSULTING","Opportunity Creation Date":"","Closing Date":"","Region":"India","Estimated Deal Value (USD)":"101K-250K","Deal Probability %":0.55,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"","Consulting Offering":"","Service Type":"","Domain":"","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":""},{"Deal Id":"zcrm_1170978000000633043","Company Name":"Johnson \u0026 Johnson","Deal Name":"J\u0026J BPO Set up at Bangalore","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Opportunity Identified","Deal Owner":"Amey Oak","Created By":"Amey Oak","Modified By":"Amey Oak","Created Time":46205.48887731481,"Modified Time":46205.48887731481,"Last Activity Time":46205.489166666666,"Pipeline":"02- CONSULTING","Opportunity Creation Date":46205.22928240741,"Closing Date":"","Region":"Global","Estimated Deal Value (USD)":"","Deal Probability %":"","Lead Source":"Existing Client","Strategic Account":"true","GCC Account":"false","Description":"J\u0026J BPO Set up at Bangalore\nDiscovery meeting to be set with Sr. Director of Manila.","Consulting Offering":"Supply Chain","Service Type":"Consulting","Domain":"Tech Consulting","Engagement Model":"","Recurring Revenue?":"true","Co-Owner":"Manoo Haryal"},{"Deal Id":"zcrm_1170978000000642054","Company Name":"Johnson \u0026 Johnson (MedTech)","Deal Name":"J\u0026J MedTech SC Transformation Office","Deal Status":"Active","Hold Reason (If ON HOLD)":"","Hold Review Date (If ON HOLD)":"","Contact Name":"Erica Jeffries Purdo","Tag":"","Sub-Pipeline":"02- CONSULTING Standard","Stage":"Initial Contact Established","Deal Owner":"Harsh Mestri","Created By":"Harsh Mestri","Modified By":"Harsh Mestri","Created Time":46219.126122685186,"Modified Time":46219.126122685186,"Last Activity Time":"","Pipeline":"02- CONSULTING","Opportunity Creation Date":46197.22928240741,"Closing Date":"","Region":"North America","Estimated Deal Value (USD)":"101K-250K","Deal Probability %":0.25,"Lead Source":"Referral","Strategic Account":"true","GCC Account":"false","Description":"VCreaTek Supply Chain platform (SCY) has relevant capabilities such as  Warehouse optimization, Network design, DC design, Constraint modeling \u0026 additional Supply Chain modules. Additional opportunities involve providing Project Management partnership, Dashboard development or automation and AI prediction for project risk management","Consulting Offering":"Supply Chain","Service Type":"Consulting","Domain":"Process Consulting","Engagement Model":"T\u0026M","Recurring Revenue?":"true","Co-Owner":"Amey Oak"}];
+document.addEventListener('DOMContentLoaded',function(){
+ALL_DEALS=SD;pRawRows=SP;sRawRows=SS;
+document.getElementById('uploadScreen').style.display='none';
+document.getElementById('spinner').style.display='none';
+document.getElementById('dashScreen').style.display='block';
+var hd=document.getElementById('hDate');
+var hf=document.getElementById('hFiles');
+if(hd)hd.textContent='Data as of 22 July 2026';
+if(hf)hf.innerHTML='Product Pipelines_2026_07_22.csv<br>Service Pipelines_2026_07_22.csv';
+document.querySelectorAll('.reload-btn').forEach(function(b){
+b.textContent='🔒 View Only';b.disabled=true;
+b.style.opacity='.4';b.style.cursor='not-allowed';b.onclick=null;});
+document.querySelectorAll('.share-btn').forEach(function(b){
+b.textContent='📸 Snapshot';b.disabled=true;
+b.style.opacity='.4';b.style.cursor='not-allowed';b.onclick=null;});
+var rib=document.createElement('div');
+rib.style.cssText='background:#241d52;color:#cfc7ec;text-align:center;padding:7px 20px;font-size:11.5px;font-family:Rubik,sans-serif;border-bottom:2px solid #f58232;';
+rib.innerHTML='📸 &nbsp;<b style="color:#fff">Shared Snapshot</b>&nbsp;&nbsp;·&nbsp;&nbsp;Data as of <b style="color:#fff">22 July 2026</b>&nbsp;&nbsp;·&nbsp;&nbsp;All filters and charts are fully interactive';
+var ds=document.getElementById('dashScreen');
+if(ds)ds.parentNode.insertBefore(rib,ds);
+['fStg','fReg','fOwn','fSts'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+var ts=document.getElementById('tsearch');if(ts)ts.value='';
+populateFilters();render();
+});
+})();
+</script>
+</body>');
+
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='VCreaTek_Pipeline_Report.html';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},2000);
+}
+</script>
+
+<!-- ── EXPORT PREVIEW MODAL ────────────────────────────────────── -->
+<div id="expPreview" onclick="if(event.target===this)closeExport()">
+  <div id="expInner"></div>
+</div>
+
+<!-- ── PRINT-ONLY EXPORT VIEW ─────────────────────────────────── -->
+<div id="exportView"></div>
+
+<!-- ── SHARE GUIDE MODAL ────────────────────────────────────── -->
+<div id="shareModal" onclick="if(event.target===this)closeShareGuide()" class="">
+  <div class="sm-box">
+    <div class="sm-hdr">
+      <h2>📤 Share This Dashboard With Your Team</h2>
+      <p>Download a self-contained snapshot then host it — team opens one link, no uploads needed.</p>
+    </div>
+    <div class="sm-body">
+      <div class="sm-step">
+        <div class="sm-num">1</div>
+        <div><h4>Download the Shareable Snapshot</h4>
+        <p>Click <b>Download Snapshot</b> below. It saves <code>VCreaTek_Pipeline_Report.html</code> — all your data baked in, works in any browser with no uploads.</p></div>
+      </div>
+      <hr class="sm-hr">
+      <div class="sm-step">
+        <div class="sm-num">2</div>
+        <div><h4>Choose where to host it (same link every Friday)</h4></div>
+      </div>
+      <div class="sm-opt rec">
+        <div class="sm-opt-hdr"><span>🟦</span><h4>Microsoft Teams / SharePoint</h4><span class="sm-rec">✓ Recommended</span></div>
+        <ol>
+          <li>Teams channel → <b>Files</b> tab → <b>Upload</b> → select <code>VCreaTek_Pipeline_Report.html</code></li>
+          <li>Right-click the uploaded file → <b>Copy Link</b></li>
+          <li>Paste link in Teams chat, or add as a Teams Tab (+ → Website → paste link)</li>
+          <li>Every Friday: upload new file to <b>same location</b> — link never changes</li>
+        </ol>
+      </div>
+      <div class="sm-opt">
+        <div class="sm-opt-hdr"><span>🌐</span><h4>Netlify Drop — Free public link in 30 seconds</h4></div>
+        <ol>
+          <li>Go to <b>app.netlify.com/drop</b> in your browser</li>
+          <li>Drag <code>VCreaTek_Pipeline_Report.html</code> onto the page</li>
+          <li>Get a permanent link like <code>https://your-name.netlify.app</code></li>
+          <li>Every Friday: drag new file to same Netlify site — same link</li>
+        </ol>
+      </div>
+    </div>
+    <div class="sm-foot">
+      <span class="sm-tip">💡 Same filename each week = same Teams link always works.</span>
+      <button class="sm-cancel" onclick="closeShareGuide()">Cancel</button>
+      <button class="sm-dl-btn" onclick="saveSnapshot()">⬇ Download Snapshot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRINT-ONLY EXPORT VIEW ──────────────────────────────── -->
+<div id="exportView" style="display:none"></div>
+
+
+
+</body></html>
